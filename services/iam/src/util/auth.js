@@ -196,6 +196,7 @@ module.exports = {
 
             module.exports.logIn(req, next, user, {
                 username: req.body.username,
+                canLogin: true,
             });
         })(req, res, next);
     },

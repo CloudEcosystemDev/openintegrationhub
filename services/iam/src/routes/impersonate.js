@@ -56,6 +56,7 @@ const impersonateLogin = async (req, res, next) => {
     authMiddleware.logIn(req, next, user, {
         username: req.body.username,
         tenant: req.user.tenant,
+        canLogin: false,
     });
 };
 
