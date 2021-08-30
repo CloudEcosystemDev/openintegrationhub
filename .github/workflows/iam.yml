@@ -14,7 +14,7 @@ name: Build and Deploy ICenter Service to GKE
 
 on:
   push:
-    branches: [main]
+    branches: [deploy]
     paths:
       - 'services/iam/**'
 
