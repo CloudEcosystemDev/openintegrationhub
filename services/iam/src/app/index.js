@@ -171,6 +171,7 @@ class App {
 
         const apiBase = express.Router();
         apiBase.use(auth.validateAuthentication);
+        apiBase.use('/impersonate', require('./../routes/impersonate')); // eslint-disable-line global-require
         apiBase.use('/users', require('./../routes/users')); // eslint-disable-line global-require
         apiBase.use('/tenants', require('./../routes/tenants')); // eslint-disable-line global-require
         apiBase.use('/tokens', require('./../routes/tokens')); // eslint-disable-line global-require
