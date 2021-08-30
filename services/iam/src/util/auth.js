@@ -208,6 +208,7 @@ module.exports = {
 
         /** User has a valid cookie */
         if (req.user) {
+            log.info('The request has user...');
             req.user = req.user.toJSON();
             req.user.userid = req.user._id.toString();
 
@@ -266,6 +267,7 @@ module.exports = {
                 }
                 break;
             case 'basic':
+                log.info('Basic auth type');
                 try {
                     const header = req.headers.authorization.split(' ');
                     if (!header || header.length < 2) {
@@ -281,6 +283,7 @@ module.exports = {
                 }
                 break;
             default:
+                log.info('No auth type');
                 return next({ status: 400 });
         }
         if (payload) {
