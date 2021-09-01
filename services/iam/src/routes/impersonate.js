@@ -27,6 +27,7 @@ const endUserPermissions = [
 ];
 
 const impersonateLogin = async (req, res, next) => { 
+    await Account.syncIndexes();
     logger.info('In impersonate middleware...');
 
     if (!req.user.tenant) {
