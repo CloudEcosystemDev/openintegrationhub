@@ -177,6 +177,9 @@ class App {
         apiBase.use('/roles', require('./../routes/roles')); // eslint-disable-line global-require
         apiBase.use('/permissions', require('./../routes/permissions')); // eslint-disable-line global-require
 
+        // New endpoint to impersonate and get a new token
+        apiBase.use('/impersonate', require('./../routes/impersonate')); // eslint-disable-line global-require
+
         // TODO: if the client is not a browser, no origin or host will be provided
         this.app.use(`/${conf.general.apiBase}`, cors(this.corsOptions), apiBase);
 
