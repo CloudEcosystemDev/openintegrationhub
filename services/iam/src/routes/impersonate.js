@@ -27,6 +27,8 @@ const endUserPermissions = [
 ];
 
 const impersonateLogin = async (req, res, next) => { 
+    logger.info('In impersonate middleware...');
+
     if (!req.user.tenant) {
         return next({ status: 401, message: 'You have to belong to a tenant' });
     }
@@ -64,6 +66,7 @@ const impersonateLogin = async (req, res, next) => {
 };
 
 router.post('/', impersonateLogin, async (req, res, next) => {
+    logger.info('In impersonate endpoint...');
     if (!req.user) {
         return next({ status: 401, message: CONSTANTS.ERROR_CODES.NOT_LOGGED_IN });
     }

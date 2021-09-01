@@ -30,6 +30,8 @@ const AccountDAO = {
             ...userObj,
         });
 
+        logger.info(`Account to be created ${JSON.stringify(userObj)}`);
+
         await account.setPassword(userObj.password);    
 
         const savedAccount = await account.save();
