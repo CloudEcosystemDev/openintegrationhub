@@ -95,6 +95,38 @@
         }
       }
     },
+    "/register": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Register route",
+        "description": "",
+        "operationId": "performRegister",
+        "requestBody": {
+          "description": "Register new user",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered account successfully"
+          },
+          "400": {
+            "description": "Bad request, Missing mandatory body"
+          },
+          "409": {
+            "description": "Account already exists"
+          }
+        }
+      }
+    },
     "/logout": {
       "post": {
         "tags": [
@@ -1042,6 +1074,34 @@
         "required": [
           "username",
           "password"
+        ]
+      },
+      "Register": {
+        "title": "Register data",
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "firstname": {
+            "type": "string"
+          },
+          "lastname": {
+            "type": "string"
+          },
+          "companyname": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "firstname",
+          "lastname",
+          "companyname"
         ]
       },
       "TenantMutable": {

@@ -11,7 +11,7 @@ const CONSTANTS = require('./../constants/index');
 const TokenUtils = require('./../util/tokens');
 const keystore = require('./../util/keystore');
 const AccountDAO = require('../dao/accounts');
-
+const TenantDAO = require('../dao/tenants');
 const logger = Logger.getLogger(`${CONF.general.loggingNameSpace}/general`, {
     level: 'debug',
 });
@@ -54,6 +54,42 @@ router.post('/login', authMiddleware.authenticate, authMiddleware.accountIsEnabl
 
 });
 
+router.post('/register', async (req, res, next) => {
+    const { username ,firstname,password,lastname,companyname} = req.body;
+    try {
+        const existingTenant = await TenantDAO.findOne({ name: companyname });
+        const existingUser = await AccountDAO.findOne({ username: username });
+        if(existingTenant || existingUser) {
+            return next({message: "Account already exists",status: 409})
+        } else {
+        const props = {
+            name: companyname, 
+            status:CONSTANTS.STATUS.ACTIVE
+        }
+        const tenant = await TenantDAO.create({props});
+        const userObj = { 
+            tenant: tenant._id,
+            username,
+            firstname,
+            lastname,
+            password, 
+            permissions:['tenant.all'], 
+            status: CONSTANTS.STATUS.ACTIVE  
+        };
+        const user = await AccountDAO.create({ userObj })
+        return res.send({id: user._id,status: 201, message: "Registered account successfully"})}
+    } catch (err) {
+        if (err.name === 'ValidationError') {
+            logger.error(err);
+            return res.sendStatus(400);
+        } else {
+            logger.error(err);
+            return next(err);
+        }
+
+    }
+
+});
 // router.get('/context', authMiddleware.validateAuthentication, async (req, res, next) => {
 //
 //     try {
