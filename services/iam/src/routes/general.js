@@ -62,7 +62,7 @@ router.post('/register', async (req, res, next) => {
             return next({message: "Account already exists",status: 409})
         } else {
         const props = {
-            name: tenantName, 
+            name: companyname, 
             status:CONSTANTS.STATUS.ACTIVE
         }
         const tenant = await TenantDAO.create({props});
