@@ -57,8 +57,9 @@ router.post('/login', authMiddleware.authenticate, authMiddleware.accountIsEnabl
 router.post('/register', async (req, res, next) => {
     const { username ,firstname,password,lastname,companyname} = req.body;
     try {
-        const doc = await TenantDAO.findOne({ name: companyname });
-        if(doc) {
+        const existingTenant = await TenantDAO.findOne({ name: companyname });
+        const existingUser = await AccountDAO.findOne({ username: username });
+        if(existingTenant || existingUser) {
             return next({message: "Account already exists",status: 409})
         } else {
         const props = {
@@ -75,10 +76,7 @@ router.post('/register', async (req, res, next) => {
             permissions:['tenant.all'], 
             status: CONSTANTS.STATUS.ACTIVE  
         };
-        const existingUser = await AccountDAO.findOne({ username: userObj.username });
-        if(existingUser) {
-            return next({message: "Account already exists",status: 409})
-        } else {
+ else {
         const user = await AccountDAO.create({ userObj })
         return res.send({id: user._id,status: 201, message: "Registered account successfully"})}
         }
