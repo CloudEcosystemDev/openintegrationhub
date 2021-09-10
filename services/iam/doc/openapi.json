@@ -1086,7 +1086,7 @@
           "lastname": {
             "type": "string"
           },
-          "tenant": {
+          "companyName": {
             "type": "string"
           },
           "password": {
