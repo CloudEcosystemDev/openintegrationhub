@@ -59,7 +59,7 @@ router.post('/register', async (req, res, next) => {
     try {
         const doc = await TenantDAO.findOne({ name: companyName });
         if(doc) {
-            return next({message: "Tenant already exists",status: 409})
+            return next({message: "Account already exists",status: 409})
         } else {
         const props = {
             name: tenantName, 

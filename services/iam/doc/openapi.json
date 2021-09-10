@@ -120,6 +120,9 @@
           },
           "400": {
             "description": "Bad request, Missing mandatory body"
+          },
+          "409": {
+            "description": "Account already exists"
           }
         }
       }
