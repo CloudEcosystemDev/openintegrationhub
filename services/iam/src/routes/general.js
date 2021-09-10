@@ -76,10 +76,8 @@ router.post('/register', async (req, res, next) => {
             permissions:['tenant.all'], 
             status: CONSTANTS.STATUS.ACTIVE  
         };
- else {
         const user = await AccountDAO.create({ userObj })
         return res.send({id: user._id,status: 201, message: "Registered account successfully"})}
-        }
     } catch (err) {
         if (err.name === 'ValidationError') {
             logger.error(err);
