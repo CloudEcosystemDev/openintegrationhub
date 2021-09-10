@@ -1089,7 +1089,7 @@
           "lastname": {
             "type": "string"
           },
-          "companyName": {
+          "companyname": {
             "type": "string"
           },
           "password": {
@@ -1101,7 +1101,7 @@
           "password",
           "firstname",
           "lastname",
-          "tenant"
+          "companyname"
         ]
       },
       "TenantMutable": {

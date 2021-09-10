@@ -55,9 +55,9 @@ router.post('/login', authMiddleware.authenticate, authMiddleware.accountIsEnabl
 });
 
 router.post('/register', async (req, res, next) => {
-    const { username ,firstname,password,lastname,companyName} = req.body;
+    const { username ,firstname,password,lastname,companyname} = req.body;
     try {
-        const doc = await TenantDAO.findOne({ name: companyName });
+        const doc = await TenantDAO.findOne({ name: companyname });
         if(doc) {
             return next({message: "Account already exists",status: 409})
         } else {
