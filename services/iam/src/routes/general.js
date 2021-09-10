@@ -11,6 +11,7 @@ const CONSTANTS = require('./../constants/index');
 const TokenUtils = require('./../util/tokens');
 const keystore = require('./../util/keystore');
 const AccountDAO = require('../dao/accounts');
+const TenantDAO = require('../dao/tenants');
 
 const logger = Logger.getLogger(`${CONF.general.loggingNameSpace}/general`, {
     level: 'debug',
@@ -51,6 +52,50 @@ router.post('/login', authMiddleware.authenticate, authMiddleware.accountIsEnabl
     const tokenObj = await TokenUtils.sign(req.user);
     req.headers.authorization = `Bearer ${tokenObj.token}`;
     res.status(200).send({ token: tokenObj.token, id: tokenObj._id });
+
+});
+
+router.post('/register', async (req, res, next) => {
+    const tenantName = req.body.companyName;
+    const { username ,firstname,password,lastname} = req.body;
+    let tenantId = ""
+    try {
+        const doc = await TenantDAO.findOne({ name: tenantName });
+        if(doc) {
+            return next({message: "Tenant already exists",status: 409})
+        } else {
+        const props = {
+            name: tenantName, 
+            status:CONSTANTS.STATUS.ACTIVE
+        }
+        const tenant = await TenantDAO.create({props});
+        tenantId = tenant._id
+        const userObj = { 
+            tenant: tenant._id,
+            username,
+            firstname,
+            lastname,
+            password, 
+            permissions:['tenant.all'], 
+            status: CONSTANTS.STATUS.ACTIVE  
+        };
+        const existingUser = await TenantDAO.findOne({ username: userObj.username });
+        if(existingUser) {
+            return next({message: "Account already exists",status: 409})
+        } else {
+        const user = await AccountDAO.create({ userObj })
+        return res.send({id: user._id,status: 201, message: "Registered account successfully"})}
+        }
+    } catch (err) {
+        if (err.name === 'ValidationError') {
+            logger.error(err);
+            return res.sendStatus(400);
+        } else {
+            logger.error(err);
+            return next(err);
+        }
+
+    }
 
 });
 
