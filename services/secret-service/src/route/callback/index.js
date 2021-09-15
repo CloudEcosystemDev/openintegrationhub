@@ -35,8 +35,7 @@ router.get('/', async (req, res, next) => {
                 redirectUrl = `${oAuth2Result.data.successUrl}&secretId=${oAuth2Result.data.secretId}`;
             }
             log.info(`You are redirected to: ${redirectUrl}`);
-            res.redirect(redirectUrl);
-            next();
+            return res.redirect(redirectUrl);
         }
 
         log.info(`No code, returning the response of hadleOAuth, query parameters ${JSON.stringify(req.query)}`);
