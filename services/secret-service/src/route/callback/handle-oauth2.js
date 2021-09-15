@@ -22,7 +22,11 @@ module.exports = async function handleOAuth2({
 
     const flow = await AuthFlowDAO.findById(stateObject.flowId);
 
+    log.info(`Flow from db: ${JSON.stringify(flow)}`);
+
     const authClient = await AuthClientDAO.findById(flow.authClientId);
+
+    log.info(`AuthClient from db: ${JSON.stringify(authClient)}`);
     let modifiedSecret = null;
     // fetch key
     req.keyParameter = flow.keyParameter;
@@ -108,6 +112,8 @@ module.exports = async function handleOAuth2({
     }
     // clean up flow data
     await AuthFlowDAO.delete(flow._id);
+
+    log.info(`Flow after deletion: ${JSON.stringify(flow)}`);
 
     return {
         data: {
