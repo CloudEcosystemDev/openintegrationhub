@@ -24,6 +24,7 @@ router.get('/', async (req, res, next) => {
             });
 
             if (!oAuth2Result.data.successUrl) {
+                log.info(`You are not redirected, response: ${JSON.stringify(oAuth2Result)}`);
                 return res.send(oAuth2Result);
             }
 
@@ -33,10 +34,11 @@ router.get('/', async (req, res, next) => {
             } else {
                 redirectUrl = `${oAuth2Result.data.successUrl}&secretId=${oAuth2Result.data.secretId}`;
             }
-
+            log.info(`You are redirected to: ${redirectUrl}`);
             return res.redirect(redirectUrl);
         }
 
+        log.info(`No code, returning the response of hadleOAuth, query parameters ${JSON.stringify(req.query)}`);
         res.send(await handleOAuth({
             queryObject,
             req,
