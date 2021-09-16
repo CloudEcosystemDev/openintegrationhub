@@ -2,16 +2,17 @@ const express = require('express');
 const logger = require('@basaas/node-logger');
 const url = require('url');
 const qs = require('querystring');
+const base64url = require('base64url');
 const handleOAuth2 = require('./handle-oauth2');
 const handleOAuth = require('./handle-oauth');
 const conf = require('../../conf');
+const sseEmitter = require('../sse/sseEventEmmiter');
 
 const log = logger.getLogger(`${conf.log.namespace}/callback`, {
     level: conf.log.level,
 });
 
 const router = express.Router();
-
 
 router.get('/', async (req, res, next) => {
     try {
@@ -33,6 +34,8 @@ router.get('/', async (req, res, next) => {
             } else {
                 redirectUrl = `${oAuth2Result.data.successUrl}&secretId=${oAuth2Result.data.secretId}`;
             }
+            // platform code
+            sseEmitter.emit('success', JSON.parse(base64url.decode(queryObject.state)).flowId);
             return res.redirect(redirectUrl);
         }
 
