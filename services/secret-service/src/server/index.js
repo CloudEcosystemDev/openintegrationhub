@@ -53,6 +53,7 @@ module.exports = class Server {
         apiBase.use('/secrets', cors(this.corsOptions));
 
         apiBase.use('/callback', require('../route/callback'));
+        apiBase.use('/ssevent', require('../route/sse'));
         apiBase.use(this.iam.middleware);
 
         // setup routes
