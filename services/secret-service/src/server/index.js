@@ -51,7 +51,6 @@ module.exports = class Server {
         apiBase.use('/callback', cors(this.corsOptions));
         apiBase.use('/auth-clients', cors(this.corsOptions));
         apiBase.use('/secrets', cors(this.corsOptions));
-        apiBase.use('/ssevent', cors(this.corsOptions));
 
         apiBase.use('/callback', require('../route/callback'));
         apiBase.use('/ssevent', require('../route/sse'));
