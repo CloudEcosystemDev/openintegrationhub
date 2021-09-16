@@ -50,6 +50,7 @@ router.get('/:flowId', async (req, res, next) => {
             flowsEvents.splice(indexFlow, 1);
             log.info(`Flows events: ${JSON.stringify(flowsEvents)}`);
         });
+        return res;
     } catch (err) {
         log.error(err);
         next({
