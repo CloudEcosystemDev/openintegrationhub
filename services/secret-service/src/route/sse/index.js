@@ -20,23 +20,13 @@ sseEmitter.on('success', (flowId) => {
         flowsEvents[indexFlow].response.write(`data: ${JSON.stringify({ status: 'success' })}\n\n`);
     } else {
         // TODO Remove this log
-        log.info(`All flowsEvents: ${flowsEvents}, flowId: ${flowId}`);
+        log.info('Not message sent to this flowId');
+        log.info(`All flowsEvents length: ${flowsEvents.length}, flowId: ${flowId}`);
     }
 });
 
 router.get('/:flowId', async (req, res, next) => {
     try {
-        const headers = {
-            'Content-Type': 'text/event-stream',
-            Connection: 'keep-alive',
-            'Cache-Control': 'no-cache',
-        };
-        res.writeHead(200, headers);
-
-        const data = `data: ${JSON.stringify({ status: 'listen' })}\n\n`;
-
-        res.write(data);
-
         const { flowId } = req.params;
 
         const indexFlow = getFlowIndex(flowId);
@@ -49,13 +39,26 @@ router.get('/:flowId', async (req, res, next) => {
             flowsEvents.push(flow);
         }
 
+        const headers = {
+            'Content-Type': 'text/event-stream',
+            Connection: 'keep-alive',
+            'Cache-Control': 'no-cache',
+        };
+        res.writeHead(200, headers);
+        res.flushHeaders();
+
+        const data = `data: ${JSON.stringify({ status: 'listen' })}\n\n`;
+
+        res.write(data);
+
         req.on('close', () => {
             log.info(`${flowId} Connection closed`);
             const indexFlow = getFlowIndex(flowId);
             if (indexFlow > -1) {
                 flowsEvents.splice(indexFlow, 1);
-                log.info(`Flows events: ${flowsEvents}`);
+                log.info(`Flows events length: ${flowsEvents.length}`);
             }
+            res.end();
         });
     } catch (err) {
         log.error(err);

@@ -38,7 +38,7 @@ router.get('/', async (req, res, next) => {
             const flowId = JSON.parse(base64url.decode(queryObject.state)).flowId;
             log.info(`FlowId before emit, flowId. ${flowId}`);
             sseEmitter.emit('success', flowId);
-            return res.redirect(redirectUrl);
+            return res.writeHead(302, { Location: redirectUrl }).end();
         }
 
         res.send(await handleOAuth({
