@@ -38,7 +38,6 @@ router.get('/:flowId', async (req, res, next) => {
         };
 
         log.info(`Here with flow ${flowId}`);
-
         if (indexFlow === -1) {
             flowsEvents.push(flow);
         }
