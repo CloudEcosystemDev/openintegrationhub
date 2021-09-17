@@ -27,13 +27,17 @@ sseEmitter.on('success', (flowId) => {
 
 router.get('/:flowId', async (req, res, next) => {
     try {
+        log.info('Here in route sse');
         const { flowId } = req.params;
 
         const indexFlow = getFlowIndex(flowId);
+        log.info(`Here with index flow ${indexFlow}`);
         const flow = indexFlow > -1 ? flowsEvents[indexFlow] : {
             id: flowId,
             response: res,
         };
+
+        log.info(`Here with flow ${flowId}`);
 
         if (indexFlow === -1) {
             flowsEvents.push(flow);
@@ -47,9 +51,13 @@ router.get('/:flowId', async (req, res, next) => {
         res.writeHead(200, headers);
         res.flushHeaders();
 
+        log.info('After flushing headers');
+
         const data = `data: ${JSON.stringify({ status: 'listen' })}\n\n`;
 
         res.write(data);
+
+        log.info('After write data');
 
         req.on('close', () => {
             log.info(`${flowId} Connection closed`);
