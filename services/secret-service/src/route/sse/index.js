@@ -47,6 +47,7 @@ router.get('/:flowId', async (req, res, next) => {
             'Content-Type': 'text/event-stream',
             Connection: 'keep-alive',
             'Cache-Control': 'no-cache',
+            'Access-Control-Allow-Origin': '*',
         };
         res.writeHead(200, headers);
         res.flushHeaders();
