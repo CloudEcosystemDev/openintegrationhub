@@ -48,7 +48,6 @@ router.get('/:flowId', async (req, res, next) => {
         if (indexFlow === -1) {
             flowsEvents.push(flow);
         }
-        log.info(`All flows events: ${flowsEvents}, index: ${indexFlow}`);
 
         req.on('close', () => {
             log.info(`${flowId} Connection closed`);
@@ -58,7 +57,6 @@ router.get('/:flowId', async (req, res, next) => {
                 log.info(`Flows events: ${flowsEvents}`);
             }
         });
-        return res.end();
     } catch (err) {
         log.error(err);
         next({
