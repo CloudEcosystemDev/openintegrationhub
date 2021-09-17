@@ -16,7 +16,12 @@ const getFlowIndex = (flowId) => flowsEvents.findIndex(({ id }) => id === flowId
 
 sseEmitter.on('success', (flowId) => {
     const indexFlow = getFlowIndex(flowId);
-    flowsEvents[indexFlow].response.write(`data: ${JSON.stringify({ status: 'success' })}\n\n`);
+    if (indexFlow > -1) {
+        flowsEvents[indexFlow].response.write(`data: ${JSON.stringify({ status: 'success' })}\n\n`);
+    } else {
+        // TODO Remove this log
+        log.info(`All flowsEvents: ${JSON.stringify(flowsEvents)}, flowId: ${flowId}`);
+    }
 });
 
 router.get('/:flowId', async (req, res, next) => {
@@ -43,6 +48,7 @@ router.get('/:flowId', async (req, res, next) => {
         if (indexFlow === -1) {
             flowsEvents.push(flow);
         }
+        log.info(`All flows events: ${JSON.stringify(flowsEvents)}, index: ${indexFlow}`);
 
         req.on('close', () => {
             log.info(`${flowId} Connection closed`);
