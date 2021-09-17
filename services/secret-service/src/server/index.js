@@ -51,6 +51,12 @@ module.exports = class Server {
         apiBase.use('/callback', cors(this.corsOptions));
         apiBase.use('/auth-clients', cors(this.corsOptions));
         apiBase.use('/secrets', cors(this.corsOptions));
+        apiBase.use('/ssevent', (req, res, next) => {
+            req.header('Access-Control-Allow-Origin', '*');
+            req.header('mode', 'no-cors');
+            req.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+            next();
+        });
         apiBase.use('/ssevent', cors({
             origin: '*',
         }));
