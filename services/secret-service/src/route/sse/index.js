@@ -48,14 +48,14 @@ router.get('/:flowId', async (req, res, next) => {
         if (indexFlow === -1) {
             flowsEvents.push(flow);
         }
-        log.info(`All flows events: ${JSON.stringify(flowsEvents)}, index: ${indexFlow}`);
+        log.info(`All flows events: ${flowsEvents}, index: ${indexFlow}`);
 
         req.on('close', () => {
             log.info(`${flowId} Connection closed`);
             const indexFlow = getFlowIndex(flowId);
             if (indexFlow > -1) {
                 flowsEvents.splice(indexFlow, 1);
-                log.info(`Flows events: ${JSON.stringify(flowsEvents)}`);
+                log.info(`Flows events: ${flowsEvents}`);
             }
         });
         return res.end();
