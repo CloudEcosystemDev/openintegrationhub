@@ -247,6 +247,7 @@ class AuthClientRouter {
                 res.send({
                     data: {
                         authUrl,
+                        flowId: flow._id,
                     },
                 });
             } catch (err) {

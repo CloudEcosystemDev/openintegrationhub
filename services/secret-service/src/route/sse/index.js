@@ -20,7 +20,7 @@ sseEmitter.on('success', (flowId) => {
         flowsEvents[indexFlow].response.write(`data: ${JSON.stringify({ status: 'success' })}\n\n`);
     } else {
         // TODO Remove this log
-        log.info(`All flowsEvents: ${JSON.stringify(flowsEvents)}, flowId: ${flowId}`);
+        log.info(`All flowsEvents: ${flowsEvents}, flowId: ${flowId}`);
     }
 });
 
@@ -53,8 +53,10 @@ router.get('/:flowId', async (req, res, next) => {
         req.on('close', () => {
             log.info(`${flowId} Connection closed`);
             const indexFlow = getFlowIndex(flowId);
-            flowsEvents.splice(indexFlow, 1);
-            log.info(`Flows events: ${JSON.stringify(flowsEvents)}`);
+            if (indexFlow > -1) {
+                flowsEvents.splice(indexFlow, 1);
+                log.info(`Flows events: ${JSON.stringify(flowsEvents)}`);
+            }
         });
         return res.end();
     } catch (err) {
