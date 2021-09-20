@@ -25,68 +25,101 @@ sseEmitter.on('success', (flowId) => {
     }
 });
 
-router.get('/:flowId', async (req, res, next) => {
-    try {
-        log.info('Here in route sse');
-        const { flowId } = req.params;
+router.get('/:flowId', async (req, res, _next) => {
+    req.socket.setKeepAlive(true);
+    req.socket.setTimeout(0);
 
-        const indexFlow = getFlowIndex(flowId);
-        log.info(`Here with index flow ${indexFlow}`);
-        const flow = indexFlow > -1 ? flowsEvents[indexFlow] : {
-            id: flowId,
-            response: res,
-        };
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.status(200);
 
-        log.info(`Here with flow ${flowId}`);
-        if (indexFlow === -1) {
-            flowsEvents.push(flow);
+    // export a function to send server-side-events
+    res.sse = function sse(string) {
+        res.write(string);
+
+        // support running within the compression middleware
+        if (res.flush && string.match(/\n\n$/)) {
+            res.flush();
         }
+    };
 
-        req.socket.setKeepAlive(true);
-        req.socket.setTimeout(0);
+    // write 2kB of padding (for IE) and a reconnection timeout
+    // then use res.sse to send to the client
+    res.write(`:${Array(2049).join(' ')}\n`);
+    res.sse('retry: 2000\n\n');
 
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
-        res.status(200);
+    // keep the connection open by sending a comment
+    const keepAlive = setInterval(() => {
+        res.sse(':keep-alive\n\n');
+    }, 20000);
 
-        // const headers = {
-        //     'Content-Type': 'text/event-stream',
-        //     Connection: 'keep-alive',
-        //     'Cache-Control': 'no-cache',
-        //     'Access-Control-Allow-Origin': '*',
-        //     'Access-Control-Allow-Headers': 'X-Requested-With',
-        //     'X-Accel-Buffering': 'no',
-        // };
-        // res.flushHeaders();
-        // res.writeHead(200, headers);
+    // cleanup on close
+    res.on('close', () => {
+        clearInterval(keepAlive);
+    });
 
-        log.info('After flushing headers');
+    // try {
+    //     log.info('Here in route sse');
+    //     const { flowId } = req.params;
 
-        const data = `data: ${JSON.stringify({ status: 'listen' })}\n\n`;
+    //     const indexFlow = getFlowIndex(flowId);
+    //     log.info(`Here with index flow ${indexFlow}`);
+    //     const flow = indexFlow > -1 ? flowsEvents[indexFlow] : {
+    //         id: flowId,
+    //         response: res,
+    //     };
 
-        res.write(data);
+    //     log.info(`Here with flow ${flowId}`);
+    //     if (indexFlow === -1) {
+    //         flowsEvents.push(flow);
+    //     }
 
-        res.flush();
+    //     req.socket.setKeepAlive(true);
+    //     req.socket.setTimeout(0);
 
-        log.info('After write data');
+    //     res.setHeader('Content-Type', 'text/event-stream');
+    //     res.setHeader('Cache-Control', 'no-cache');
+    //     res.setHeader('Connection', 'keep-alive');
+    //     res.status(200);
 
-        req.on('close', () => {
-            log.info(`${flowId} Connection closed`);
-            const indexFlow = getFlowIndex(flowId);
-            if (indexFlow > -1) {
-                flowsEvents.splice(indexFlow, 1);
-                log.info(`Flows events length: ${flowsEvents.length}`);
-            }
-            res.end();
-        });
-    } catch (err) {
-        log.error(err);
-        next({
-            status: 400,
-            message: err.message || err,
-        });
-    }
+    //     // const headers = {
+    //     //     'Content-Type': 'text/event-stream',
+    //     //     Connection: 'keep-alive',
+    //     //     'Cache-Control': 'no-cache',
+    //     //     'Access-Control-Allow-Origin': '*',
+    //     //     'Access-Control-Allow-Headers': 'X-Requested-With',
+    //     //     'X-Accel-Buffering': 'no',
+    //     // };
+    //     // res.flushHeaders();
+    //     // res.writeHead(200, headers);
+
+    //     log.info('After flushing headers');
+
+    //     const data = `data: ${JSON.stringify({ status: 'listen' })}\n\n`;
+
+    //     res.write(data);
+
+    //     res.flush();
+
+    //     log.info('After write data');
+
+    //     req.on('close', () => {
+    //         log.info(`${flowId} Connection closed`);
+    //         const indexFlow = getFlowIndex(flowId);
+    //         if (indexFlow > -1) {
+    //             flowsEvents.splice(indexFlow, 1);
+    //             log.info(`Flows events length: ${flowsEvents.length}`);
+    //         }
+    //         res.end();
+    //     });
+    // } catch (err) {
+    //     log.error(err);
+    //     next({
+    //         status: 400,
+    //         message: err.message || err,
+    //     });
+    // }
 });
 
 module.exports = router;
