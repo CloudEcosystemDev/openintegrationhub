@@ -42,22 +42,32 @@ router.get('/:flowId', async (req, res, next) => {
             flowsEvents.push(flow);
         }
 
-        const headers = {
-            'Content-Type': 'text/event-stream',
-            Connection: 'keep-alive',
-            'Cache-Control': 'no-cache',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'X-Requested-With',
-            'X-Accel-Buffering': 'no',
-        };
-        res.flushHeaders();
-        res.writeHead(200, headers);
+        req.socket.setKeepAlive(true);
+        req.socket.setTimeout(0);
+
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.status(200);
+
+        // const headers = {
+        //     'Content-Type': 'text/event-stream',
+        //     Connection: 'keep-alive',
+        //     'Cache-Control': 'no-cache',
+        //     'Access-Control-Allow-Origin': '*',
+        //     'Access-Control-Allow-Headers': 'X-Requested-With',
+        //     'X-Accel-Buffering': 'no',
+        // };
+        // res.flushHeaders();
+        // res.writeHead(200, headers);
 
         log.info('After flushing headers');
 
         const data = `data: ${JSON.stringify({ status: 'listen' })}\n\n`;
 
         res.write(data);
+
+        res.flush();
 
         log.info('After write data');
 
