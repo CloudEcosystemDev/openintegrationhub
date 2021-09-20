@@ -50,8 +50,8 @@ router.get('/:flowId', async (req, res, next) => {
             'Access-Control-Allow-Headers': 'X-Requested-With',
             'X-Accel-Buffering': 'no',
         };
-        res.writeHead(200, headers);
         res.flushHeaders();
+        res.writeHead(200, headers);
 
         log.info('After flushing headers');
 
