@@ -36,9 +36,6 @@ router.get('/:flowId', async (req, res, _) => {
     if (req.httpVersion !== '2.0') {
         res.setHeader('Connection', 'keep-alive');
     }
-    if (this.options.isCompressed) {
-        res.setHeader('Content-Encoding', 'deflate');
-    }
 
     // export a function to send server-side-events
     res.sse = function sse(string) {
