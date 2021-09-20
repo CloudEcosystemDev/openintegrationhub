@@ -59,6 +59,7 @@ module.exports = class Server {
         });
         apiBase.use('/ssevent', cors({
             origin: '*',
+            optionsSuccessStatus: 200,
         }));
 
         apiBase.use('/callback', require('../route/callback'));
