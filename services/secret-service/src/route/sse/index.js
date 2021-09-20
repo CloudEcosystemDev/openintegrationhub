@@ -25,23 +25,26 @@ sseEmitter.on('success', (flowId) => {
     }
 });
 
-router.get('/:flowId', async (req, res, _next) => {
-    req.socket.setKeepAlive(true);
+router.get('/:flowId', async (req, res, _) => {
     req.socket.setTimeout(0);
-
+    req.socket.setNoDelay(true);
+    req.socket.setKeepAlive(true);
+    res.statusCode = 200;
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.status(200);
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (req.httpVersion !== '2.0') {
+        res.setHeader('Connection', 'keep-alive');
+    }
+    if (this.options.isCompressed) {
+        res.setHeader('Content-Encoding', 'deflate');
+    }
 
     // export a function to send server-side-events
     res.sse = function sse(string) {
         res.write(string);
 
-        // support running within the compression middleware
-        if (res.flush && string.match(/\n\n$/)) {
-            res.flush();
-        }
+        res.flush();
     };
 
     // write 2kB of padding (for IE) and a reconnection timeout
