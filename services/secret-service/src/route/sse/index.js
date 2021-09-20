@@ -26,6 +26,7 @@ sseEmitter.on('success', (flowId) => {
 });
 
 router.get('/:flowId', async (req, res, _) => {
+    log.info('In the sse middleware...');
     req.socket.setTimeout(0);
     req.socket.setNoDelay(true);
     req.socket.setKeepAlive(true);
@@ -34,13 +35,14 @@ router.get('/:flowId', async (req, res, _) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('X-Accel-Buffering', 'no');
     if (req.httpVersion !== '2.0') {
+        log.info('Setting connection header...');
         res.setHeader('Connection', 'keep-alive');
     }
 
     // export a function to send server-side-events
     res.sse = function sse(string) {
+        log.info('Writing message...');
         res.write(string);
-
         res.flush();
     };
 
@@ -51,6 +53,7 @@ router.get('/:flowId', async (req, res, _) => {
 
     // keep the connection open by sending a comment
     const keepAlive = setInterval(() => {
+        log.info('Keeping alive...');
         res.sse(':keep-alive\n\n');
     }, 20000);
 
