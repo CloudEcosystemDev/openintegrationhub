@@ -15,7 +15,7 @@ const logger = Logger.getLogger(`${CONF.general.loggingNameSpace}/general`, {
 
 const endUserPermissions = [
     'flows.read',
-    'flows.write',
+    'tenant.flows.update', // flows.write
     'flows.update',
     'flows.delete',
     'icenter.read',
