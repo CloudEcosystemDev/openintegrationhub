@@ -232,11 +232,11 @@ module.exports = {
         props);
     },
 
-    async findByAuthClient(
+    findByAuthClient(
         id,
         authClientId,
     ) {
-        return await Secret.full.find({
+        return Secret.full.find({
             'value.authClientId': authClientId,
             'owners.id': id,
         },
