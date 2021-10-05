@@ -1685,6 +1685,17 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
+"@openintegrationhub/iam-utils@1.6.4":
+  version "1.6.4"
+  resolved "https://registry.yarnpkg.com/@openintegrationhub/iam-utils/-/iam-utils-1.6.4.tgz#42e61f723bf98afeceae80ca7274796181fd8160"
+  integrity sha512-hWDOkyYSUR23loVUyaZOmBiDnnDE2lz4n6jO7x9XwPVbqRHXN/JQXLPwp8qBsbKcjOOtV50h93fZv6gkoAxWMw==
+  dependencies:
+    "@basaas/node-logger" "1.1.5"
+    base64url "3.0.1"
+    node-cache "4.2.0"
+    request "2.88.0"
+    request-promise "4.2.4"
+
 "@panva/asn1.js@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@panva/asn1.js/-/asn1.js-1.0.0.tgz#dd55ae7b8129e02049f009408b97c61ccf9032f6"
@@ -16242,10 +16253,10 @@ nodemon@1.19.4:
     undefsafe "^2.0.2"
     update-notifier "^2.5.0"
 
-nodemon@2.0.10-alpha.1:
-  version "2.0.10-alpha.1"
-  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-2.0.10-alpha.1.tgz#409984210d99c4237fb8989211dbc905c457bc47"
-  integrity sha512-+TyTKQcYFq9gATtiuljDgqFunRRjMxv0AuwI0cUWFNW13qDXBobH2+VXJOqTRCZlNpClxmovPMv1AAQyqBY15g==
+nodemon@2.0.12:
+  version "2.0.12"
+  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-2.0.12.tgz#5dae4e162b617b91f1873b3bfea215dd71e144d5"
+  integrity sha512-egCTmNZdObdBxUBw6ZNwvZ/xzk24CKRs5K6d+5zbmrMr7rOpPmfPeF6OxM3DDpaRx331CQRFEktn+wrFFfBSOA==
   dependencies:
     chokidar "^3.2.2"
     debug "^3.2.6"
