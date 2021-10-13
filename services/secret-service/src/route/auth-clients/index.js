@@ -62,11 +62,13 @@ class AuthClientRouter {
 
         this.router.get('/', async (req, res, next) => {
             try {
-                const pagination = new Pagination(req.originalUrl, AuthClientDAO, req.user.sub);
+                // FIXME: Temp fix in order to not get all auth clients
+                const tenant = req.user.tenant;
+                const pagination = new Pagination(req.originalUrl, AuthClientDAO, req.user.tenant);
 
                 res.send({
                     data: await AuthClientDAO.findWithPagination(
-                        {},
+                        { tenant },
                         pagination.props(),
                     ),
                     meta: {
