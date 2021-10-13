@@ -56,7 +56,6 @@ module.exports = class Server {
         apiBase.use(this.iam.middleware);
 
         // setup routes
-
         apiBase.use('/secrets', new SecretsRouter({ iam: this.iam }));
         apiBase.use('/auth-clients', new AuthClientRouter({ iam: this.iam }));
 

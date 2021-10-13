@@ -12,7 +12,6 @@ const log = logger.getLogger(`${conf.log.namespace}/callback`, {
 
 const router = express.Router();
 
-
 router.get('/', async (req, res, next) => {
     try {
         const queryObject = qs.parse(url.parse(req.originalUrl).query);
@@ -33,7 +32,6 @@ router.get('/', async (req, res, next) => {
             } else {
                 redirectUrl = `${oAuth2Result.data.successUrl}&secretId=${oAuth2Result.data.secretId}`;
             }
-
             return res.redirect(redirectUrl);
         }
 

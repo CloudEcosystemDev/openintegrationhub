@@ -62,11 +62,13 @@ class AuthClientRouter {
 
         this.router.get('/', async (req, res, next) => {
             try {
-                const pagination = new Pagination(req.originalUrl, AuthClientDAO, req.user.sub);
+                // FIXME: Temp fix in order to not get all auth clients
+                const tenant = req.user.tenant;
+                const pagination = new Pagination(req.originalUrl, AuthClientDAO, req.user.tenant);
 
                 res.send({
                     data: await AuthClientDAO.findWithPagination(
-                        {},
+                        { tenant },
                         pagination.props(),
                     ),
                     meta: {
@@ -193,7 +195,7 @@ class AuthClientRouter {
         this.router.get('/:id/secrets', /* userIsOwnerOfAuthClient, */ async (req, res, next) => {
             const authClient = await AuthClientDAO.findOne({ _id: req.params.id });
             try {
-                const secrets = findByAuthClient(
+                const secrets = await findByAuthClient(
                     req.user.sub,
                     authClient._id,
                 );
@@ -247,6 +249,7 @@ class AuthClientRouter {
                 res.send({
                     data: {
                         authUrl,
+                        flowId: flow._id,
                     },
                 });
             } catch (err) {

@@ -30,9 +30,11 @@ const AccountDAO = {
             ...userObj,
         });
 
-        await account.setPassword(userObj.password);
+        logger.info(`Account to be created ${JSON.stringify(userObj)}`);
 
-        await account.save();
+        await account.setPassword(userObj.password);    
+
+        const savedAccount = await account.save();
 
         logger.debug('created.account', { ...userObj, password: '***' });
 
@@ -46,7 +48,7 @@ const AccountDAO = {
         });
         EventBusManager.getEventBus().publish(event);
 
-        return account.toJSON();
+        return savedAccount;
     },
 
     update: async (query, payload, opts) => {

@@ -5,7 +5,9 @@ const passportLocalMongoose = require('passport-local-mongoose');
 const CONSTANTS = require('../../constants');
 
 const validateEmail = function(email) {
-    return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email); // eslint-disable-line
+    return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
+        email,
+  ); // eslint-disable-line
 };
 
 // const membershipsSchema = new Schema({
@@ -29,9 +31,7 @@ const schema = {
     username: {
         type: String,
         lowercase: true,
-        index: { unique: true },
         required: true,
-        validate: [validateEmail, CONSTANTS.ERROR_CODES.EMAIL_NOT_VALID],
     },
 
     firstname: { type: String, index: true },
@@ -40,15 +40,14 @@ const schema = {
     avatar: String,
     status: {
         type: String,
-        'enum': [
+        enum: [
             CONSTANTS.STATUS.ACTIVE,
             CONSTANTS.STATUS.DISABLED,
             CONSTANTS.STATUS.PENDING,
         ],
-        'default': CONSTANTS.STATUS.ACTIVE,
-
+        default: CONSTANTS.STATUS.ACTIVE,
     },
-    confirmed: { type: Boolean, 'default': false },
+    confirmed: { type: Boolean, default: false },
     // accountType: {
     //     type: String,
     //     'enum': [
@@ -59,12 +58,20 @@ const schema = {
     //     'default': CONSTANTS.ROLES.USER,
     //
     // },
-    tenant: {
-        type: Schema.ObjectId, ref: 'tenant',
+    canLogin: {
+        type: Boolean,
+        default: true,
     },
-    roles: [{
-        type: Schema.ObjectId, ref: 'role',
-    }],
+    tenant: {
+        type: Schema.ObjectId,
+        ref: 'tenant',
+    },
+    roles: [
+        {
+            type: Schema.ObjectId,
+            ref: 'role',
+        },
+    ],
     // memberships: [membershipsSchema],
     permissions: [String],
     safeguard: {
@@ -78,16 +85,54 @@ const account = new Schema(schema, {
     strict: true,
 });
 
-account.plugin(passportLocalMongoose);
-
-const accountFull = new Schema({
-    ...schema,
-    hash: String,
-    salt: String,
+// adding unique index tenant & username
+account.index({
+    username: 1,
 }, {
-    timestamps: true,
-    strict: true,
+    unique: true,
+    partialFilterExpression: { canLogin: true },
 });
+account.index(
+    {
+        username: 1,
+        tenant: 1,
+    },
+    {
+        unique: true,
+        partialFilterExpression: { canLogin: false }, 
+    },
+);
+
+// adding canLogin: true
+account.plugin(passportLocalMongoose, {
+    usernameUnique: false,
+
+    findByUsername: (model, queryParameters) => {
+        queryParameters.canLogin = true;
+        return model.findOne(queryParameters);
+    },
+});
+
+account.path('username').validate(function(email) {
+    if (this.canLogin) {
+        if (!validateEmail(email)) {
+            throw new Error(CONSTANTS.ERROR_CODES.EMAIL_NOT_VALID);
+        }
+    }
+    return true;
+}, 'Name `{VALUE}` is not valid');
+
+const accountFull = new Schema(
+    {
+        ...schema,
+        hash: String,
+        salt: String,
+    },
+    {
+        timestamps: true,
+        strict: true,
+    },
+);
 
 module.exports.account = account;
 module.exports.accountFull = accountFull;

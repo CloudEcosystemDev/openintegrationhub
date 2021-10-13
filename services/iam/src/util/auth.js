@@ -118,6 +118,45 @@ module.exports = {
         }
     },
 
+    logIn: (req, next, user, userQuery) => req.logIn(user, async (err) => {
+        if (err) {
+            log.error('Failed to login user', err);
+            const event = new Event({
+                headers: {
+                    name: 'iam.user.loginFailed',
+                },
+                payload: { user: req.body.username.toString() },
+            });
+            EventBusManager.getEventBus().publish(event);
+            return next({ status: 500, message: CONSTANTS.ERROR_CODES.DEFAULT });
+        }
+
+        if (req.body['remember-me']) {
+            req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Cookie expires after 30 days
+        } else {
+            req.session.cookie.expires = false; // Cookie expires at end of session
+        }
+
+        await Account.updateOne(userQuery, {
+            $set: {
+                'safeguard.lastLogin': new Date(),
+                'safeguard.failedLoginAttempts': 0,
+            },
+        }, {
+            timestamps: false, 
+        });
+
+        req.session.save((err) => {
+            if (err) {
+                log.error('Error saving session', err);
+                return next(err);
+            }
+
+            return next();
+
+        });
+    }),
+
     authenticate: (req, res, next) => {
         passport.authenticate('local', async (err, user, passportErrorMsg) => {
 
@@ -155,50 +194,11 @@ module.exports = {
                 return next({ status: 401, message: CONSTANTS.ERROR_CODES.DEFAULT });
             }
 
-            req.logIn(user, async (err) => {
-                if (err) {
-                    log.error('Failed to login user', err);
-                    const event = new Event({
-                        headers: {
-                            name: 'iam.user.loginFailed',
-                        },
-                        payload: { user: req.body.username.toString() },
-                    });
-                    EventBusManager.getEventBus().publish(event);
-                    return next({ status: 500, message: CONSTANTS.ERROR_CODES.DEFAULT });
-                }
-
-                if (req.body['remember-me']) {
-                    req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Cookie expires after 30 days
-                } else {
-                    req.session.cookie.expires = false; // Cookie expires at end of session
-                }
-
-                await Account.updateOne({
-                    username: req.body.username,
-                }, {
-                    $set: {
-                        'safeguard.lastLogin': new Date(),
-                        'safeguard.failedLoginAttempts': 0,
-                    },
-                }, {
-                    timestamps: false, 
-                });
-
-                req.session.save((err) => {
-                    if (err) {
-                        log.error('Error saving session', err);
-                        return next(err);
-                    }
-
-                    return next();
-
-                });
-
+            module.exports.logIn(req, next, user, {
+                username: req.body.username,
+                canLogin: true,
             });
-
         })(req, res, next);
-
     },
 
     validateAuthentication: async (req, res, next) => {

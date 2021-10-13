@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const CONSTANTS = require('../../constants');
 
 const TenantSchema = new Schema({
-    name: { type: String, index: true },
+    name: { type: String, index: true,unique:true },
     confirmed: { 
         type: Boolean, 
         default: true, 
