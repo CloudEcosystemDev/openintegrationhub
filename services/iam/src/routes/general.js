@@ -19,19 +19,13 @@ const logger = Logger.getLogger(`${CONF.general.loggingNameSpace}/general`, {
 
 router.get('/', (req, res, next) => {
     try {
-        res.send(
-            pug.renderFile(
-                path.join(__dirname, '../views/home.pug'), {
-                },
-            ),
-        );
+        res.send(pug.renderFile(path.join(__dirname, '../views/home.pug'), {}));
     } catch (err) {
         next(err);
     }
 });
 
 router.get('/.well-known/jwks.json', async (req, res) => {
-
     const jwks = await keystore.getKeystoreAsJSON();
 
     if (CONF.jwt.algorithmType === CONSTANTS.JWT_ALGORITHMS.RSA) {
@@ -39,21 +33,41 @@ router.get('/.well-known/jwks.json', async (req, res) => {
     } else {
         return res.status(423).send({ message: 'RSA algorithm is not activated' });
     }
-
 });
 
-router.post('/login', authMiddleware.authenticate, authMiddleware.accountIsEnabled, async (req, res, next) => {
+router.post(
+    '/login',
+    authMiddleware.authenticate,
+    authMiddleware.accountIsEnabled,
+    async (req, res, next) => {
+        if (!req.user) {
+            return next({
+                status: 401,
+                message: CONSTANTS.ERROR_CODES.NOT_LOGGED_IN,
+            });
+        }
 
-    if (!req.user) {
-        return next({ status: 401, message: CONSTANTS.ERROR_CODES.NOT_LOGGED_IN });
-    }
+        // TODO: should normal users always receive a token? Is that token long living?
+        const tokenObj = await TokenUtils.sign(req.user);
+        req.headers.authorization = `Bearer ${tokenObj.token}`;
+        res.status(200).send({ token: tokenObj.token, id: tokenObj._id });
+    },
+);
 
-    // TODO: should normal users always receive a token? Is that token long living?
-    const tokenObj = await TokenUtils.sign(req.user);
-    req.headers.authorization = `Bearer ${tokenObj.token}`;
-    res.status(200).send({ token: tokenObj.token, id: tokenObj._id });
-
-});
+const defaultUserPermissions = [
+    'components.read',
+    'components.write',
+    'tenant.all',
+    'tagging.read',
+    'tagging.write',
+    'templates.read',
+    'templates.write',
+    'templates.control',
+    'tenant.flows.update',
+    'icenter.read',
+    'icenter.write',
+    'icenter.control',
+];
 
 router.post('/register', async (req, res, next) => {
     const {
@@ -66,21 +80,25 @@ router.post('/register', async (req, res, next) => {
             return next({ message: 'Account already exists', status: 409 });
         } else {
             const props = {
-                name: companyname, 
+                name: companyname,
                 status: CONSTANTS.STATUS.ACTIVE,
             };
             const tenant = await TenantDAO.create({ props });
-            const userObj = { 
+            const userObj = {
                 tenant: tenant._id,
                 username,
                 firstname,
                 lastname,
-                password, 
-                permissions: ['tenant.all'], 
-                status: CONSTANTS.STATUS.ACTIVE,  
+                password,
+                permissions: defaultUserPermissions,
+                status: CONSTANTS.STATUS.ACTIVE,
             };
             const user = await AccountDAO.create({ userObj });
-            return res.send({ id: user._id, status: 201, message: 'Registered account successfully' }); 
+            return res.send({
+                id: user._id,
+                status: 201,
+                message: 'Registered account successfully',
+            });
         }
     } catch (err) {
         if (err.name === 'ValidationError') {
@@ -90,9 +108,7 @@ router.post('/register', async (req, res, next) => {
             logger.error(err);
             return next(err);
         }
-
     }
-
 });
 // router.get('/context', authMiddleware.validateAuthentication, async (req, res, next) => {
 //
@@ -143,20 +159,23 @@ router.post('/register', async (req, res, next) => {
 //
 //     });
 
-router.post('/logout', authMiddleware.validateAuthentication, async (req, res) => {
+router.post(
+    '/logout',
+    authMiddleware.validateAuthentication,
+    async (req, res) => {
+        const accountId = req.user.userid;
 
-    const accountId = req.user.userid;
+        req.logout();
+        res.clearCookie(CONF.jwt.cookieName);
 
-    req.logout();
-    res.clearCookie(CONF.jwt.cookieName);
-
-    try {
-        await TokenUtils.deleteSessionToken({ accountId });
-        res.send({ loggedOut: true });
-    } catch (e) {
-        logger.error('Failed to delete session token', e);
-        res.sendStatus(500);
-    }
-});
+        try {
+            await TokenUtils.deleteSessionToken({ accountId });
+            res.send({ loggedOut: true });
+        } catch (e) {
+            logger.error('Failed to delete session token', e);
+            res.sendStatus(500);
+        }
+    },
+);
 
 module.exports = router;

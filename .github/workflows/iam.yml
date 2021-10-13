@@ -10,7 +10,7 @@
 #
 # For more support on how to run the workflow, please visit https://github.com/google-github-actions/setup-gcloud/tree/master/example-workflows/gke
 
-name: Build and Deploy ICenter Service to GKE
+name: Build and Deploy Iam Service to GKE
 
 on:
   push:
@@ -61,7 +61,7 @@ jobs:
           --tag "eu.gcr.io/$PROJECT_ID/$IMAGE:latest" \
           --build-arg GITHUB_SHA="$GITHUB_SHA" \
           --build-arg GITHUB_REF="$GITHUB_REF" \
-          ./services/iam
+          ./services/iam/Dockerfile ../../
 
     # Push the Docker image to Google Container Registry
     - name: Publish
