@@ -1,12 +1,12 @@
 const express = require('express');
 const Logger = require('@basaas/node-logger');
 const authMiddleware = require('../util/auth');
-const CONSTANTS = require('./../constants/index');
-const CONF = require('./../conf');
+const CONSTANTS = require('../constants/index');
+const CONF = require('../conf');
 const AccountDAO = require('../dao/accounts');
 const Account = require('../models/account');
 
-const TokenUtils = require('./../util/tokens');
+const TokenUtils = require('../util/tokens');
 
 const router = express.Router();
 const logger = Logger.getLogger(`${CONF.general.loggingNameSpace}/general`, {
@@ -24,6 +24,8 @@ const endUserPermissions = [
     'secrets.delete',
     'templates.read',
     'components.read',
+    'tenant.profile.read',
+    'tenant.profile.update',
 ];
 
 const impersonateLogin = async (req, res, next) => { 
