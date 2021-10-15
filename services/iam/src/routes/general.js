@@ -67,6 +67,9 @@ const defaultUserPermissions = [
     'icenter.read',
     'icenter.write',
     'icenter.control',
+    'tenant.profile.read',
+    'tenant.profile.update',
+    'tenant.account.update',
 ];
 
 router.post('/register', async (req, res, next) => {
