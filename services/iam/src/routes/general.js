@@ -77,9 +77,8 @@ router.post('/register', async (req, res, next) => {
         username, firstname, password, lastname, companyname, 
     } = req.body;
     try {
-        const existingTenant = await TenantDAO.findOne({ name: companyname });
         const existingUser = await AccountDAO.findOne({ username, canLogin: true });
-        if (existingTenant || existingUser) {
+        if (existingUser) {
             return next({ message: 'Account already exists', status: 409 });
         } else {
             const props = {
