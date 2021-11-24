@@ -24,6 +24,7 @@ const endUserPermissions = [
     'secrets.delete',
     'templates.read',
     'components.read',
+    'secrets.secret.readRaw',
 ];
 
 const impersonateLogin = async (req, res, next) => { 

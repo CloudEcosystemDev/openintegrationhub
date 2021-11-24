@@ -71,6 +71,7 @@ const defaultUserPermissions = [
     'tenant.profile.update',
     'tenant.account.update',
     'flows.control',
+    'secrets.secret.readRaw',
 ];
 
 router.post('/register', async (req, res, next) => {
