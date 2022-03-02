@@ -18,7 +18,7 @@
     "start:nodemon:minikube": ". ../../minikube/.env && npm start:nodemon",
     "start:container": "nodemon -L --watch src/ --watch ../../lib/backend-commons-lib/src --watch ../../lib/component-repository/src | bunyan",
     "build": "echo \"No Build defined\"",
-    "build:docker": "docker build -t juanspada/component-repository:1.0.7 -f Dockerfile ../../"
+    "build:docker": "docker build -t juanspada/component-repository:1.0.8 -f Dockerfile ../../"
   },
   "dependencies": {
     "@openintegrationhub/component-repository": "*",
