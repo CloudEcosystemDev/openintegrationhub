@@ -28,6 +28,7 @@ const lookupSchema = new Schema({
   function: { type: String, required: true },
   keyPath: { type: String, required: true },
   labelPath: { type: String, required: true },
+  parameterName: { type: String, required: true },
 });
 
 const defaultSchema = new Schema({

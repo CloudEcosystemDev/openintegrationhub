@@ -80,12 +80,14 @@ class Server {
     log.info('Middleware set up');
   }
 
+  // eslint-disable-next-line class-methods-use-this
   async setupQueue() {
     // eslint-disable-line
     log.info('Connecting to Queue');
     await connectQueue();
   }
 
+  // eslint-disable-next-line class-methods-use-this
   async terminateQueue() {
     // eslint-disable-line
     log.info('Disconnecting from Queue');
