@@ -3,6 +3,72 @@ const { AUTH_TYPE } = require('../../constants');
 
 const Schema = mongoose.Schema;
 
+const TYPES = {
+  TEXT: 'TEXT',
+  JSONATA: 'JSONATA',
+  INPUT_FIELD: 'INPUT_FIELD',
+  LOOKUP: 'LOOKUP',
+};
+
+const mapperDefaultSchema = new Schema({
+  type: {
+    type: String,
+    enum: Object.keys(TYPES),
+    required: true,
+  },
+}, {
+  _id: false,
+  discriminatorKey: 'type',
+});
+
+const DefaultModel = mongoose.model('MapperDefault', mapperDefaultSchema);
+
+const lookupSchema = new Schema({
+  componentId: { type: String, required: true },
+  function: { type: String, required: true },
+  keyPath: { type: String, required: true },
+  labelPath: { type: String, required: true },
+  parameterName: { type: String, required: true },
+});
+
+const defaultSchema = new Schema({
+  value: {
+    type: String,
+    required: true,
+  },
+});
+
+const TYPES_MODELS = {
+  TEXT: DefaultModel.discriminator(TYPES.TEXT, defaultSchema),
+  JSONATA: DefaultModel.discriminator(TYPES.JSONATA, defaultSchema),
+  INPUT_FIELD: DefaultModel.discriminator(TYPES.INPUT_FIELD, defaultSchema),
+  LOOKUP: DefaultModel.discriminator(TYPES.LOOKUP, lookupSchema),
+};
+
+const customValidate = (mapper) => {
+  if (mapper) {
+    Object.keys(mapper).forEach((key) => {
+      const currentField = mapper[key];
+      if (currentField.type) {
+        if (!TYPES_MODELS[currentField.type]) {
+          throw new Error(`${key}##Path  \`type\` can only be ${Object.keys(TYPES_MODELS)}.`);
+        }
+        const fieldModel = new TYPES_MODELS[currentField.type](currentField);
+        const validations = fieldModel.validateSync();
+        if (validations) {
+          const errorKeys = Object.keys(validations.errors);
+          const property = key;
+          const message = validations.errors[errorKeys[0]].message;
+          throw new Error(`${property}##${message}`);
+        }
+      } else {
+        throw new Error(`${key}##Path  \`type\` is required.`);
+      }
+    });
+  }
+  return true;
+};
+
 const node = new Schema({
   id: { type: String, required: [true, 'Flow Template nodes require an id.'] },
   componentId: {
@@ -25,8 +91,17 @@ const node = new Schema({
       type: mongoose.Types.ObjectId,
     },
   },
-  _id: false,
-});
+  mapper: {
+    type: mongoose.Mixed,
+    validate: {
+      validator: customValidate,
+      message: (props) => {
+        const [errorPath, errorMessage] = props.reason.message.split('##');
+        return `Error in 'mapper.${errorPath}', ${errorMessage}`;
+      },
+    },
+  },
+}, { _id: false });
 
 const edge = new Schema({
   id: { type: String },
