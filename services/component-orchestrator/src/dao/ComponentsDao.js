@@ -6,7 +6,6 @@ const path = require('path');
 const _ = require('lodash');
 const { promisify } = require('util');
 const getAsync = promisify(request.get);
-const fetch = require('node-fetch')
 class OIHComponentsDao extends ComponentsDao {
     constructor({ config, logger }) {
         super();
