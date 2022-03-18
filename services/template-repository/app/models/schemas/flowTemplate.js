@@ -25,7 +25,7 @@ const DefaultModel = mongoose.model('MapperDefault', mapperDefaultSchema);
 
 const lookupSchema = new Schema({
   componentId: { type: String, required: true },
-  function: { type: String, required: true },
+  functionName: { type: String, required: true },
   keyPath: { type: String, required: true },
   labelPath: { type: String, required: true },
   parameterName: { type: String, required: true },
