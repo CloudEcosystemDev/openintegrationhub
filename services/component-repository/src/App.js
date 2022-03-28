@@ -24,7 +24,6 @@ class ComponentRepositoryApp extends App {
         const server = container.resolve('server');
         await server.start();
     }
-
     static get NAME() {
         return 'component-repository';
     }
