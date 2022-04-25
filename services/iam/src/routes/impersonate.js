@@ -18,6 +18,7 @@ const endUserPermissions = [
     'tenant.flows.update', // flows.write
     'flows.update',
     'flows.delete',
+    'flows.control',
     'icenter.read',
     'icenter.write',
     'secrets.create',
@@ -27,7 +28,7 @@ const endUserPermissions = [
     'components.read',
 ];
 
-const impersonateLogin = async (req, res, next) => { 
+const impersonateLogin = async (req, res, next) => {
     logger.info('In impersonate middleware...');
 
     if (!req.user.tenant) {
@@ -51,8 +52,8 @@ const impersonateLogin = async (req, res, next) => {
 
         try {
             user = await AccountDAO.create({
-                userObj, 
-            });    
+                userObj,
+            });
         } catch (error) {
             logger.error(JSON.stringify(error));
             return next({ status: 500, message: 'Internal Server Error' });
