@@ -19,6 +19,7 @@ const endUserPermissions = [
     'flows.update',
     'flows.delete',
     'icenter.read',
+    'icenter.write',
     'secrets.create',
     'secrets.read',
     'secrets.delete',
