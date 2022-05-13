@@ -26,6 +26,7 @@ const endUserPermissions = [
     'secrets.delete',
     'templates.read',
     'components.read',
+    'components.write', // to get lookups data
 ];
 
 const impersonateLogin = async (req, res, next) => {
