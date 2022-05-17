@@ -8,6 +8,7 @@ const TYPES = {
   JSONATA: 'JSONATA',
   INPUT_FIELD: 'INPUT_FIELD',
   LOOKUP: 'LOOKUP',
+  USER_INPUT: 'USER_INPUT',
 };
 
 const mapperDefaultSchema = new Schema(
@@ -50,6 +51,7 @@ const TYPES_MODELS = {
   JSONATA: DefaultModel.discriminator(TYPES.JSONATA, defaultSchema),
   INPUT_FIELD: DefaultModel.discriminator(TYPES.INPUT_FIELD, defaultSchema),
   LOOKUP: DefaultModel.discriminator(TYPES.LOOKUP, lookupSchema),
+  USER_INPUT: DefaultModel,
 };
 
 const customValidate = (mapper) => {
