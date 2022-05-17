@@ -37,6 +37,15 @@ const lookupSchema = new Schema({
   },
 });
 
+const userInputSchema = new Schema({
+  data: {
+    parameterName: {
+      type: String,
+      required: true,
+    },
+  },
+});
+
 const defaultSchema = new Schema({
   data: {
     value: {
@@ -51,7 +60,7 @@ const TYPES_MODELS = {
   JSONATA: DefaultModel.discriminator(TYPES.JSONATA, defaultSchema),
   INPUT_FIELD: DefaultModel.discriminator(TYPES.INPUT_FIELD, defaultSchema),
   LOOKUP: DefaultModel.discriminator(TYPES.LOOKUP, lookupSchema),
-  USER_INPUT: DefaultModel,
+  USER_INPUT: DefaultModel.discriminator(TYPES.USER_INPUT, userInputSchema),
 };
 
 const customValidate = (mapper) => {
