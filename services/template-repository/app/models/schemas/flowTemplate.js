@@ -99,6 +99,10 @@ const node = new Schema(
       type: mongoose.Types.ObjectId,
       required: [true, 'Flow Template nodes require a componentId.'],
     },
+    virtualComponentId: {
+      type: String,
+      description: 'The virtual component id',
+    },
     function: {
       type: String,
       required: [true, 'Flow Template nodes require a function.'],
