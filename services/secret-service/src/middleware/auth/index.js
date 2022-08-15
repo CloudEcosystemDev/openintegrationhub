@@ -1,11 +1,12 @@
 const logger = require('@basaas/node-logger');
+const { isOwnerOf } = require('@openintegrationhub/iam-utils');
 const conf = require('../../conf');
 
 const log = logger.getLogger(`${conf.log.namespace}/auth`);
 const SecretDAO = require('../../dao/secret');
 const AuthClientDAO = require('../../dao/auth-client');
 
-async function userIsOwnerOf(dao, req, res, next) {
+async function userIsOwnerOf(dao, req, res, next, validation) {
     // TODO check for type as well
     try {
         const doc = await dao.findOne({
@@ -15,11 +16,9 @@ async function userIsOwnerOf(dao, req, res, next) {
         if (!doc) {
             return next({ status: 404 });
         }
-        const userIsOwner = doc.owners.find(
-            elem => elem.id === req.user.sub,
-        );
+        const userHasAccess = (validation && validation(doc)) || doc.owners.find((elem) => elem.id === req.user.sub);
 
-        if (userIsOwner) {
+        if (userHasAccess) {
             req.obj = doc;
             return next();
         }
@@ -39,5 +38,11 @@ module.exports = {
     async userIsOwnerOfAuthClient(req, res, next) {
         await userIsOwnerOf(AuthClientDAO, req, res, next);
     },
-
+    async userIsInEntityTenant(dao, req, res, next) {
+        await userIsOwnerOf(dao, req, res, next, (entity) => isOwnerOf({
+            entity,
+            user: req.user,
+            allTenantUsers: true,
+        }));
+    },
 };
