@@ -6,7 +6,7 @@ const log = logger.getLogger(`${conf.log.namespace}/auth`);
 const SecretDAO = require('../../dao/secret');
 const AuthClientDAO = require('../../dao/auth-client');
 
-async function userIsOwnerOf(dao, req, res, next, validation) {
+async function userIsOwnerOf(dao, req, res, next, allTenantUsers = false) {
     // TODO check for type as well
     try {
         const doc = await dao.findOne({
@@ -16,7 +16,11 @@ async function userIsOwnerOf(dao, req, res, next, validation) {
         if (!doc) {
             return next({ status: 404 });
         }
-        const userHasAccess = (validation && validation(doc)) || doc.owners.find((elem) => elem.id === req.user.sub);
+        const userHasAccess = isOwnerOf({
+            allTenantUsers,
+            entity: doc,
+            user: req.user,
+        });
 
         if (userHasAccess) {
             req.obj = doc;
@@ -39,10 +43,6 @@ module.exports = {
         await userIsOwnerOf(AuthClientDAO, req, res, next);
     },
     async userIsInEntityTenant(dao, req, res, next) {
-        await userIsOwnerOf(dao, req, res, next, (entity) => isOwnerOf({
-            entity,
-            user: req.user,
-            allTenantUsers: true,
-        }));
+        await userIsOwnerOf(dao, req, res, next, true);
     },
 };
