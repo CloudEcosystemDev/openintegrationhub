@@ -1,5 +1,5 @@
 const { RequestHandlers } = require('@openintegrationhub/webhooks');
-const { DEFAULT_HMAC_HEADER_KEY = 'x-hmac', DEFAULT_HMAC_ALGORITHM = 'sha265', WEBHOOK_EXECUTE_PERMISSION = 'webhooks.execute' } = process.env;
+const { DEFAULT_HMAC_HEADER_KEY = 'x-hmac', DEFAULT_HMAC_ALGORITHM = 'sha256', WEBHOOK_EXECUTE_PERMISSION = 'webhooks.execute' } = process.env;
 const fetch = require('node-fetch');
 const iamUtils = require('@openintegrationhub/iam-utils');
 
@@ -17,9 +17,12 @@ class PostRequestHandler extends RequestHandlers.Post {
 
     async authorize() {
         // Has the first node of the flow been configured to enforce authentication?
-        const flow = this.getFlow();
+        let flow = this.getFlow();
         const flowSettings = flow.getFlowSettings();
         const flowUser = flow.getFlowUser();
+
+        // Normalize Owner Types for sending to iam-utils GH #1422 TODO: Normalize constants, then remove this line
+        flow.owners.forEach(x => ('type' in x) ? x.type = x.type.toUpperCase(): null);
         // Default to false if field doesn't exist
         const { requireWebhookAuth = false, hmacHeaderKey = DEFAULT_HMAC_HEADER_KEY, hmacAuthSecret, hmacAlgorithm = DEFAULT_HMAC_ALGORITHM, allTenantUsers=false } = flowSettings;
         if (!requireWebhookAuth) {
@@ -27,8 +30,8 @@ class PostRequestHandler extends RequestHandlers.Post {
             return;
         }
 
-        const hmacHeaderValue = this._req.header(hmacHeaderKey);
-        if  (hmacHeaderValue) {
+        if (flowSettings.hmacAuthSecret) {
+          const hmacHeaderValue = this._req.header(hmacHeaderKey);
           const success = await this.authenticateHmac(hmacAuthSecret,hmacHeaderValue,hmacAlgorithm,flowUser,this._req.rawBody);
           if (success) {
             return;
@@ -124,12 +127,14 @@ class PostRequestHandler extends RequestHandlers.Post {
             headers: {
                 'x-auth-type': 'basic',
                 authorization: `Bearer ${token}`,
+                'content-type': 'application/json'
             },
-            body: {
-              hmacHeader,
+            method: 'post',
+            body: JSON.stringify({
+              hmacValue: hmacHeader,
               hmacAlgo,
               rawBody,
-            }
+            })
         },
       );
 

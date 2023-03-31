@@ -99,6 +99,7 @@ async function requestHelper(url, form) {
         .then(checkStatus)
         .then((response) => response.json())
         .catch((error) => { throw new Error(error); }); */
+    log.debug(`requestHelper: url: ${url} body params: ${params.toString()}`);
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -123,13 +124,14 @@ async function exchangeRequest(url, {
 }
 
 async function refreshRequest(url, {
-    clientId, clientSecret, refreshToken,
+    clientId, clientSecret, refreshToken, scope,
 }) {
     return await requestHelper(url, {
         client_id: clientId,
         client_secret: clientSecret,
         refresh_token: refreshToken,
         grant_type: 'refresh_token',
+        ...(scope ? { scope } : {}),
     });
 }
 
@@ -238,14 +240,17 @@ module.exports = {
         }
     },
     async refresh(authClient, secret) {
+        log.debug(`Refreshing auth ${secret && secret._id ? secret._id : ''} client id: ${authClient && authClient._id ? authClient._id : ''}`);
         switch (authClient.type) {
         case OA2_AUTHORIZATION_CODE: {
-            const { clientId, clientSecret } = authClient;
-            const { refreshToken } = secret.value;
+            const { clientId, clientSecret, refreshWithScope } = authClient;
+            const { refreshToken, scope } = secret.value;
+            const combinedScope = (authClient.predefinedScope ? `${authClient.predefinedScope} ` : '') + scope;
             return await refreshRequest(authClient.endpoints.token, {
                 clientId,
                 clientSecret,
                 refreshToken,
+                ...(refreshWithScope ? { scope: combinedScope } : {}),
             });
         }
         case SESSION_AUTH: {

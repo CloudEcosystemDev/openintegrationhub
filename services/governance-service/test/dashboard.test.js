@@ -152,7 +152,7 @@ beforeAll(async () => {
     },
     activity: {
       id: '30j0hew9kwbnkksfb09',
-      activityType: 'ObjectRetrieved',
+      activityType: 'ObjectReceived',
       used: 'getPersons',
     },
     agent: {
@@ -177,9 +177,8 @@ beforeAll(async () => {
         actedOnBehalfOf: 'Google',
       },
       {
-        id: 'j460ge49qh3rusfuos',
         agentType: 'Flow',
-        actedOnBehalfOf: 'Flow1',
+        id: 'Flow1',
       },
       {
         id: 't35fdhtz57586',
@@ -220,9 +219,8 @@ beforeAll(async () => {
         actedOnBehalfOf: 'Office365',
       },
       {
-        id: 'j460ge49qh3rusfuox',
         agentType: 'Flow',
-        actedOnBehalfOf: 'Flow2',
+        id: 'Flow2',
       },
       {
         id: 't35fdhtz57586',
@@ -263,9 +261,8 @@ beforeAll(async () => {
         actedOnBehalfOf: 'Snazzy',
       },
       {
-        id: 'j460ge49qh3rusfuoz',
         agentType: 'Flow',
-        actedOnBehalfOf: 'Flow1',
+        id: 'Flow1',
       },
       {
         id: 't35fdhtz57586',
@@ -296,7 +293,7 @@ describe('Dashboard Operations', () => {
       .set('Content-Type', 'application/json');
 
     expect(res.status).toEqual(200);
-    expect(res.body).toEqual({
+    expect(res.body.data).toEqual({
       Snazzy: {
         created: 0,
         updated: 1,
@@ -318,6 +315,28 @@ describe('Dashboard Operations', () => {
     });
   });
 
+  test('should get the data distribution based on reduced event number', async () => {
+    const res = await request
+      .get('/dashboard/distribution?number=1')
+      .set('Authorization', 'Bearer adminToken')
+      .set('accept', 'application/json')
+      .set('Content-Type', 'application/json');
+
+    expect(res.status).toEqual(200);
+    expect(res.body.data).toEqual({
+      Snazzy: {
+        created: 0,
+        updated: 1,
+        retrieved: 0,
+        deleted: 0,
+      },
+    });
+    expect(res.body.meta).toEqual({
+      number: 1,
+      total: 3,
+    });
+  });
+
   test('should get the data distribution as graph', async () => {
     const res = await request
       .get('/dashboard/distribution/graph')
@@ -326,7 +345,7 @@ describe('Dashboard Operations', () => {
       .set('Content-Type', 'application/json');
 
     expect(res.status).toEqual(200);
-    const graph = res.body;
+    const graph = res.body.data;
 
     expect(graph.nodes).toHaveLength(3);
     expect(graph.edges).toHaveLength(2);
@@ -411,20 +430,20 @@ describe('Dashboard Operations', () => {
       .set('Content-Type', 'application/json');
 
     expect(res.status).toEqual(200);
-    const { body } = res;
+    const { data } = res.body;
 
-    expect(body.events).toHaveLength(3);
-    expect(body.oihUid).toEqual('aoveu03dv921dvo');
-    expect(body.refs).toHaveLength(3);
-    expect(body.refs).toContainEqual({
+    expect(data.events).toHaveLength(3);
+    expect(data.oihUid).toEqual('aoveu03dv921dvo');
+    expect(data.refs).toHaveLength(3);
+    expect(data.refs).toContainEqual({
       applicationUid: 'Office365',
       recordUid: 'abc',
     });
-    expect(body.refs).toContainEqual({
+    expect(data.refs).toContainEqual({
       applicationUid: 'Snazzy',
       recordUid: 'ghi',
     });
-    expect(body.refs).toContainEqual({
+    expect(data.refs).toContainEqual({
       applicationUid: 'Google',
       recordUid: 'def',
     });
@@ -438,10 +457,10 @@ describe('Dashboard Operations', () => {
       .set('Content-Type', 'application/json');
 
     expect(res.status).toEqual(200);
-    expect(Array.isArray(res.body.flowWarnings)).toEqual(true);
-    expect(res.body.flowWarnings.length).toEqual(1);
-    expect(res.body.flowWarnings[0].flowId).toEqual('1');
-    expect(res.body.flowWarnings[0].reason).toEqual('No node settings');
-    expect(res.body.flowWarnings[0].flowData).toEqual(testFlows.data[0]);
+    expect(Array.isArray(res.body.data.flowWarnings)).toEqual(true);
+    expect(res.body.data.flowWarnings.length).toEqual(1);
+    expect(res.body.data.flowWarnings[0].flowId).toEqual('1');
+    expect(res.body.data.flowWarnings[0].reason).toEqual('No node settings');
+    expect(res.body.data.flowWarnings[0].flowData).toEqual(testFlows.data[0]);
   });
 });

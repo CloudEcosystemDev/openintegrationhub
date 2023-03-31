@@ -12,7 +12,7 @@ import {
     Add, NavigateNext, NavigateBefore,
 } from '@material-ui/icons';
 import Modal from '@material-ui/core/Modal';
-
+import { withRouter } from 'react-router-dom';
 // components
 import JSONInput from 'react-json-editor-ajrm';
 import locale from 'react-json-editor-ajrm/locale/en';
@@ -88,11 +88,40 @@ class Flows extends React.Component {
             type: 'ordinary',
             cron: '*/2 * * * *',
         };
+        this.initialFlow = {
+            name: 'Add name here',
+            description: 'Add description here',
+            graph: {
+                nodes: [
+                    {
+                        id: 'step_1',
+                        componentId: 'COMPONENT ID',
+                        name: 'Flow node name',
+                        function: 'TRIGGER',
+                        description: 'Flow node description',
+                    },
+
+                ],
+                edges: [],
+            },
+            type: 'ordinary',
+            cron: '*/2 * * * *',
+        };
     }
 
     addFlow = () => {
         this.props.switchAddState();
     };
+
+    initiateFlow = async () => {
+        const newFlow = await this.props.createFlow(this.initialFlow);
+        await this.props.getFlows();
+        // const { flows } = this.props;
+        // const { id } = this.props.flows.all[flows.all.length - 1];
+        this.props.history.push({
+            pathname: `/flows/${newFlow.id}`,
+        });
+    }
 
     saveFlow = () => {
         if (this.state.wasChanged) {
@@ -141,6 +170,9 @@ class Flows extends React.Component {
                     <Grid item xs={8}>
                         <Button variant="outlined" aria-label="Add" onClick={this.addFlow}>
                         Add<Add/>
+                        </Button>
+                        <Button variant="outlined" aria-label="Add" onClick={this.initiateFlow}>
+                        New Flow<Add/>
                         </Button>
                     </Grid>
                     {this.props.flows.meta && <Grid item xs={4}>
@@ -212,10 +244,10 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
     switchAddState,
 }, dispatch);
 
-export default flow(
+export default withRouter(flow(
     connect(
         mapStateToProps,
         mapDispatchToProps,
     ),
     withStyles(useStyles),
-)(Flows);
+)(Flows));

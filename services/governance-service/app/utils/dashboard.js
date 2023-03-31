@@ -34,9 +34,9 @@ async function getRefs(id, recordUid, token) {
 }
 
 // Calculates object distribution by events
-async function getObjectDistribution(user) {
+async function getObjectDistribution(user, number, from, until) {
   try {
-    const allEvents = await getProvenanceEvents(user, 5000, 1, false, false, false, false, false);
+    const allEvents = await getProvenanceEvents(user, number || 5000, 1, false, 'createdAt', -1, from || false, until || false);
 
     const serviceCounts = {};
 
@@ -45,7 +45,7 @@ async function getObjectDistribution(user) {
       const serviceEntry = currentEvent.actedOnBehalfOf.find((el) => el.agentType === 'Application');
       if (!serviceEntry) continue;
 
-      const serviceName = serviceEntry.actedOnBehalfOf || 'unkownService';
+      const serviceName = serviceEntry.actedOnBehalfOf || 'unknownService';
 
       if (!(serviceName in serviceCounts)) {
         serviceCounts[serviceName] = {
@@ -57,7 +57,7 @@ async function getObjectDistribution(user) {
       }
 
       switch (currentEvent.activity.activityType) {
-      case 'ObjectRetrieved':
+      case 'ObjectReceived':
         serviceCounts[serviceName].retrieved += 1;
         break;
       case 'ObjectUpdated':
@@ -74,7 +74,7 @@ async function getObjectDistribution(user) {
       }
     }
 
-    return serviceCounts;
+    return { distribution: serviceCounts, total: allEvents.meta.total };
   } catch (e) {
     log.error(e);
     return false;
@@ -82,9 +82,9 @@ async function getObjectDistribution(user) {
 }
 
 // Calculates object distribution and formats as a graph
-async function getObjectDistributionAsGraph(user) {
+async function getObjectDistributionAsGraph(user, number, from, until) {
   try {
-    const allEvents = await getProvenanceEvents(user, 5000, 1, false, false, false, false, false);
+    const allEvents = await getProvenanceEvents(user, number || 5000, 1, false, 'createdAt', -1, from || false, until || false);
 
     const nodes = [];
     const edges = [];
@@ -95,8 +95,8 @@ async function getObjectDistributionAsGraph(user) {
       const flowEntry = currentEvent.actedOnBehalfOf.find((el) => el.agentType === 'Flow');
       if (!serviceEntry || !flowEntry) continue;
 
-      const serviceName = serviceEntry.actedOnBehalfOf || 'unkownService';
-      const flowId = flowEntry.actedOnBehalfOf || 'unknownFlow';
+      const serviceName = serviceEntry.actedOnBehalfOf || 'unknownService';
+      const flowId = flowEntry.id || 'unknownFlow';
 
       let nodeIndex = nodes.findIndex((el) => el.data.id === serviceName);
 
@@ -132,16 +132,16 @@ async function getObjectDistributionAsGraph(user) {
         edgeIndex = edges.length - 1;
       }
 
-      if (!edges[edgeIndex].data.source && currentEvent.activity.activityType === 'ObjectRetrieved') {
+      if (!edges[edgeIndex].data.source && currentEvent.activity.activityType === 'ObjectReceived') {
         edges[edgeIndex].data.source = serviceName;
       }
 
-      if (!edges[edgeIndex].data.target && currentEvent.activity.activityType !== 'ObjectRetrieved') {
+      if (!edges[edgeIndex].data.target && currentEvent.activity.activityType !== 'ObjectReceived') {
         edges[edgeIndex].data.target = serviceName;
       }
 
       switch (currentEvent.activity.activityType) {
-      case 'ObjectRetrieved':
+      case 'ObjectReceived':
         nodes[nodeIndex].data.retrieved += 1;
         edges[edgeIndex].data.retrieved += 1;
         break;
@@ -162,7 +162,7 @@ async function getObjectDistributionAsGraph(user) {
       }
     }
 
-    return { nodes, edges };
+    return { graph: { nodes, edges }, total: allEvents.meta.total };
   } catch (e) {
     log.error(e);
     return false;
@@ -246,6 +246,8 @@ async function checkFlows(token) {
     totalPages = flowReproResult.meta.totalPages;
   }
 
+  if (!flowReproResult || !('data' in flowReproResult)) return [];
+
   let affectedFlows = getFlowsWithProblematicSettings(flowReproResult.data);
 
   let page = 2;
@@ -279,8 +281,6 @@ function drawRingChart(maxIn, maxOut, nodeData) {
 }
 
 function drawGraph(graph) {
-  console.log(JSON.stringify(graph));
-
   // Group edges for display
   const edges = [];
   const flowsIndex = {};
@@ -313,9 +313,6 @@ function drawGraph(graph) {
       edges[i].data.width = 12;
     }
   }
-
-  log.info('Edges:');
-  log.info(edges);
 
   const elements = graph.nodes.concat(edges); // graph.edges
 

@@ -128,6 +128,10 @@ jobs:
     docker: *node_env
     working_directory: ~/oih/services/flow-repository
     steps: *npm_test_steps
+  governance-service-test:
+    docker: *node_env
+    working_directory: ~/oih/services/governance-service
+    steps: *npm_test_steps
   template-repository-test:
     docker: *node_env
     working_directory: ~/oih/services/template-repository
@@ -151,6 +155,10 @@ jobs:
   rds-test:
     docker: *node_env
     working_directory: ~/oih/services/rds
+    steps: *npm_test_steps
+  analytics-service-test:
+    docker: *node_mongo_env
+    working_directory: ~/oih/services/analytics-service
     steps: *npm_test_steps
 workflows:
   pipeline:
@@ -184,6 +192,12 @@ workflows:
           requires:
             - deps
       - flow-repository-test:
+          requires:
+            - deps
+      - governance-service-test:
+          requires:
+            - deps
+      - analytics-service-test:
           requires:
             - deps
       - template-repository-test:
@@ -234,6 +248,7 @@ workflows:
             - scheduler-test
             - secret-service-test
             - flow-repository-test
+            - governance-service-test
             - template-repository-test
             - audit-log-test
             - rds-test
@@ -242,6 +257,7 @@ workflows:
             - data-hub-test
             - ils-test
             - dispatcher-service-test
+            - analytics-service-test
       - build:
           requires:
             - test
