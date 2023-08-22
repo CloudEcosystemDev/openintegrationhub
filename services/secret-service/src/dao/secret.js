@@ -85,7 +85,7 @@ function refreshToken(secret) {
                 secret,
             ));
         } catch (err) {
-            log.error('Failed to refresh secret', { ...logContext, err });
+            log.error('Failed to refresh secret', { ...logContext, err: `${err}` });
             reject(err);
         }
     });
