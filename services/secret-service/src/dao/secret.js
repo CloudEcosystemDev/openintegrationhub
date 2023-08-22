@@ -71,17 +71,21 @@ function cryptoSecret(secret, key, method = ENCRYPT, selection = []) {
 
 function refreshToken(secret) {
     return new Promise(async (resolve, reject) => {
-        let authClient;
-        try {
-            authClient = await AuthClientDAO.findById(secret.value.authClientId);
+        const logContext = {
+            secretId: `${secret._id}`
+        };
 
-            log.debug('About to refresh secret', { secretId: secret._id, authClientId: authClient._id });
+        try {
+            const authClient = await AuthClientDAO.findById(secret.value.authClientId);
+            logContext.authClientId = `${authClient._id}`;
+
+            log.debug('About to refresh secret', { ...logContext });
             resolve(await authFlowManager.refresh(
                 authClient,
                 secret,
             ));
         } catch (err) {
-            log.error('Failed to refresh secret', { secretId: secret._id, authClientId: authClient?._id, err });
+            log.error('Failed to refresh secret', { ...logContext, err });
             reject(err);
         }
     });

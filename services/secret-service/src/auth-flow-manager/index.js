@@ -240,33 +240,52 @@ module.exports = {
         }
     },
     async refresh(authClient, secret) {
-        log.debug(`Refreshing secret ${secret && secret._id ? secret._id : ''} via auth client id: ${authClient && authClient._id ? authClient._id : ''}`, {
-            secretId: secret._id,
-            authClientId: authClient._id
-        });
+        const logContext = {
+            secretId: `${secret?._id}`,
+            authClientId: `${authClient?._id}`
+        }
+
+        log.debug(`Refreshing secret`, logContext);
         switch (authClient.type) {
         case OA2_AUTHORIZATION_CODE: {
             const { clientId, clientSecret, refreshWithScope } = authClient;
             const { refreshToken, scope } = secret.value;
             const combinedScope = (authClient.predefinedScope ? `${authClient.predefinedScope} ` : '') + scope;
-            return await refreshRequest(authClient.endpoints.token, {
+
+            const params = {
                 clientId,
                 clientSecret,
                 refreshToken,
                 ...(refreshWithScope ? { scope: combinedScope } : {}),
+            }
+
+            log.debug(`Refreshing oauth secret with params`, {
+                ...logContext,
+                url: authClient.endpoints.token,
+                ...params
             });
+
+            return await refreshRequest(authClient.endpoints.token, params);
         }
         case SESSION_AUTH: {
             const { tokenPath } = authClient;
             const { authType, url, requestFields } = authClient.endpoints.auth;
             const { inputFields } = secret.value;
 
-            return await sessionRequest(url, {
+            const params = {
                 inputFields,
                 authType,
                 tokenPath,
                 requestFields,
+            };
+
+            log.debug(`Refreshing session auth secret with params`, {
+                ...logContext,
+                url,
+                ...params
             });
+
+            return await sessionRequest(url, params);
         }
         default:
         }
