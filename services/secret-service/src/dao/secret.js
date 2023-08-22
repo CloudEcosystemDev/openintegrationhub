@@ -16,6 +16,8 @@ const CONSTANTS = require('../constant');
 
 const auditLog = Logger.getAuditLogger(`${conf.log.namespace}/secretDao`);
 
+const log = Logger.getLogger(`${conf.log.namespace}/secretDao`, { json: true });
+
 // retry refresh procedure after ms
 const waitBeforeRetry = 1000;
 const MAX_RETRY = 3;
@@ -72,11 +74,13 @@ function refreshToken(secret) {
         try {
             const authClient = await AuthClientDAO.findById(secret.value.authClientId);
 
+            log.debug('About to refresh secret', { secretId: secret._id, authClientId: authClient._id });
             resolve(await authFlowManager.refresh(
                 authClient,
                 secret,
             ));
         } catch (err) {
+            log.error('Failed to refresh secret', { secretId: secret._id, authClientId: authClient._id, err });
             reject(err);
         }
     });

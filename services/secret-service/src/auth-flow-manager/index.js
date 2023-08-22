@@ -9,7 +9,7 @@ const { OA2_AUTHORIZATION_CODE, OA1_THREE_LEGGED, SESSION_AUTH } = require('../c
 const { HEADER_AUTH, BODY_AUTH, PARAMS_AUTH } = require('../constant').AUTH_REQUEST_TYPE;
 const defaultAdapter = require('../adapter/preprocessor/default');
 
-const log = logger.getLogger(`${conf.log.namespace}/auth-flow-manager`);
+const log = logger.getLogger(`${conf.log.namespace}/auth-flow-manager`, { json: true });
 
 class HTTPResponseError extends Error {
     constructor(response, ...args) {
@@ -240,7 +240,10 @@ module.exports = {
         }
     },
     async refresh(authClient, secret) {
-        log.debug(`Refreshing auth ${secret && secret._id ? secret._id : ''} client id: ${authClient && authClient._id ? authClient._id : ''}`);
+        log.debug(`Refreshing secret ${secret && secret._id ? secret._id : ''} via auth client id: ${authClient && authClient._id ? authClient._id : ''}`, {
+            secretId: secret._id,
+            authClientId: authClient._id
+        });
         switch (authClient.type) {
         case OA2_AUTHORIZATION_CODE: {
             const { clientId, clientSecret, refreshWithScope } = authClient;
