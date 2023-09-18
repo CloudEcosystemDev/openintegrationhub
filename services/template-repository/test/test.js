@@ -1,8 +1,4 @@
-/* eslint no-unused-expressions: "off" */
-/* eslint max-len: "off" */
-/* eslint no-underscore-dangle: "off" */
-/* eslint no-unused-vars: "off" */
-
+/* eslint-disable max-len */
 const mongoose = require('mongoose');
 
 process.env.MONGODB_URL = global.__MONGO_URI__;
@@ -13,11 +9,11 @@ const request = require('supertest')(`${hostUrl}:${port}`);
 const iamMock = require('./utils/iamMock.js');
 const token = require('./utils/tokens');
 const { getOrphanedTemplates } = require('../app/api/controllers/mongo');
-const { reportHealth } = require('../app/utils/eventBus');
 const {
   gdprAnonymise, cleanupOrphans,
 } = require('../app/utils/handlers');
 const FlowTemplate = require('../app/models/flowTemplate');
+const TemplateVersion = require('../app/models/templateVersion');
 
 const Server = require('../app/server');
 
@@ -25,7 +21,6 @@ const mainServer = new Server();
 
 const log = require('../app/config/logger'); // eslint-disable-line
 
-const adminId = token.adminToken.value.sub;
 const guestId = token.guestToken.value.sub;
 
 let template1;
@@ -358,47 +353,6 @@ describe('Template Validation', () => {
     expect(res.body.errors[2].message).toEqual('Invalid cron expression.');
   });
 
-  // test('should refuse a template with too long attribute values', async () => {
-  //   const res = await request
-  //     .post('/templates')
-  //     .set('Authorization', 'Bearer adminToken')
-  //     .set('accept', 'application/json')
-  //     .set('Content-Type', 'application/json')
-  //     .send({
-  //       name: 'emptyTemplate',
-  //       description: 'Should throw an error for just about every single field due to length',
-  //       owners: [
-  //         { id: '01234567890123456789012345678901', type: '01234567890123456789012345678901' },
-  //       ],
-  //       graph: {
-  //         nodes: [
-  //           {
-  //             id: '01234567890123456789012345678901012345678901234567890123456789010123456789012345678901234567890101234567890123456789012345678901',
-  //             name: '01234567890123456789012345678901012345678901234567890123456789010123456789012345678901234567890101234567890123456789012345678901',
-  //             function: '01234567890123456789012345678901',
-  //             componentId: '5ca5c44c187c040010a9bb8b',
-  //           },
-  //           {
-  //             id: '01234567890123456789012345678901012345678901234567890123456789010123456789012345678901234567890101234567890123456789012345678901',
-  //             name: '01234567890123456789012345678901012345678901234567890123456789010123456789012345678901234567890101234567890123456789012345678901',
-  //             function: '01234567890123456789012345678901',
-  //             componentId: '5ca5c44c187c040010a9bb8c',
-  //           },
-  //         ],
-  //         edges: [
-  //           {
-  //             id: '0123456789012345678901234567890101234567890123456789012345678901012345678901234567890123456789010123456789012345678901234567890101234567890123456789012345678901',
-  //             source: '01234567890123456789012345678901',
-  //             target: '01234567890123456789012345678901',
-  //           },
-  //         ],
-  //       },
-  //     });
-  //   expect(res.status).toEqual(400);
-  //   expect(res.body.errors).toHaveLength(11);
-  //   expect(res.body.errors[0].message).toEqual('Path `id` (`01234567890123456789012345678901`) is longer than the maximum allowed length (30).');
-  // });
-
   test('should refuse a template according to the same rules when patching instead of posting', async () => {
     const tempTemplate = {
       graph: {
@@ -465,7 +419,7 @@ describe('Template Validation', () => {
     expect(res.status).toEqual(400);
     expect(res.body.errors).toHaveLength(11);
 
-    const delResponse = await FlowTemplate.findOneAndDelete({ _id: tempTempId }).lean();
+    await FlowTemplate.findOneAndDelete({ _id: tempTempId }).lean();
   });
 });
 
@@ -709,7 +663,7 @@ describe('Template Operations', () => {
     expect(j.data[0]).toHaveProperty('id');
   });
 
-  test('should update template', async () => {
+  test('should update template and create one template version', async () => {
     const res = await request
       .patch(`/templates/${template1}`)
       .set('Authorization', 'Bearer adminToken')
@@ -732,41 +686,96 @@ describe('Template Operations', () => {
     expect(j).not.toBeNull();
 
     expect(j.data).toHaveProperty('id');
+
+    const templateVersion = await TemplateVersion.find({ templateId: new mongoose.Types.ObjectId(template1) }).lean();
+    expect(templateVersion).toHaveLength(1);
+    // The previous version should have a different name
+    expect(templateVersion[0].name).not.toEqual('NewName');
   });
 
-  /* test('should stop a flow', async () => {
+  test('should update template and create second template version', async () => {
     const res = await request
-      .post(`/templates/${template1}/stop`)
+      .patch(`/templates/${template1}`)
+      .set('Authorization', 'Bearer adminToken')
+      .set('accept', 'application/json')
+      .set('Content-Type', 'application/json')
+      .send({
+        name: 'thirdName',
+      });
+    expect(res.status).toEqual(200);
+    expect(res.text).not.toBeNull();
+    const j = res.body;
+    expect(j).not.toBeNull();
+
+    expect(j.data).toHaveProperty('id');
+
+    const templateVersion = await TemplateVersion.find({ templateId: new mongoose.Types.ObjectId(template1) }).sort({ _id: -1 }).lean();
+    expect(templateVersion).toHaveLength(2);
+    // The previous version should have a different name
+    expect(templateVersion[0].name).not.toEqual('thirdName');
+  });
+
+  test('should get template versions', async () => {
+    const res = await request
+      .get(`/templates/${template1}/versions`)
       .set('Authorization', 'Bearer adminToken')
       .set('accept', 'application/json')
       .set('Content-Type', 'application/json');
 
     expect(res.status).toEqual(200);
-    expect(res.text).not.toBeNull();
+
     const j = res.body;
     expect(j).not.toBeNull();
-    expect(j.data).toHaveProperty('id');
-    expect(j.data).toHaveProperty('status');
-    expect(j.data.id).toEqual(template1);
-    expect(j.data.status).toEqual('stopping');
-  }); */
 
-  /* test('should refuse to stop an already stopping flow', async () => {
+    expect(j.data).toHaveLength(2);
+    expect(j.data[0]).not.toHaveProperty('template');
+    expect(j.data[0]).toHaveProperty('id');
+  });
+
+  test('should get template versions with all information', async () => {
     const res = await request
-      .post(`/templates/${template1}/stop`)
+      .get(`/templates/${template1}/versions?verbose=true`)
       .set('Authorization', 'Bearer adminToken')
       .set('accept', 'application/json')
       .set('Content-Type', 'application/json');
 
-    expect(res.status).toEqual(409);
-  }); */
+    expect(res.status).toEqual(200);
 
-  /* test('handle a flow.stopped event', async () => {
-    await flowStopped(template1);
+    const j = res.body;
+    expect(j).not.toBeNull();
 
-    const flow = await Flow.findOne({ _id: template1 }).lean();
-    expect(flow.status).toEqual('inactive');
-  }); */
+    expect(j.data).toHaveLength(2);
+    expect(j.data[0]).toHaveProperty('template');
+    expect(j.data[0]).toHaveProperty('id');
+  });
+
+  test('should return 404 for an unexistent version', async () => {
+    const res = await request
+      .get(`/templates/${template1}/versions/${new mongoose.Types.ObjectId()}`)
+      .set('Authorization', 'Bearer adminToken')
+      .set('accept', 'application/json')
+      .set('Content-Type', 'application/json');
+
+    expect(res.status).toEqual(404);
+  });
+
+  test('should return an specific template version', async () => {
+    const templateVersion = await TemplateVersion.findOne({}).lean();
+
+    const res = await request
+      .get(`/templates/${template1}/versions/${templateVersion._id}`)
+      .set('Authorization', 'Bearer adminToken')
+      .set('accept', 'application/json')
+      .set('Content-Type', 'application/json');
+
+    expect(res.status).toEqual(200);
+
+    const j = res.body;
+    expect(j).not.toBeNull();
+
+    expect(j.data.template).not.toBeNull();
+    expect(j.data.id).toEqual(templateVersion._id.toString());
+  });
 
   test('handle a user delete event', async () => {
     await gdprAnonymise('dude');
@@ -775,16 +784,6 @@ describe('Template Operations', () => {
     expect(template.owners).toHaveLength(1);
     expect(template.owners.find((owner) => (owner.id === 'dude'))).toEqual(undefined);
   });
-
-  /* test('should refuse to stop an inactive flow', async () => {
-    const res = await request
-      .post(`/templates/${template1}/stop`)
-      .set('Authorization', 'Bearer adminToken')
-      .set('accept', 'application/json')
-      .set('Content-Type', 'application/json');
-
-    expect(res.status).toEqual(409);
-  }); */
 
   test('should return 400 when attempting to update an invalid id', async () => {
     const res = await request
@@ -831,6 +830,9 @@ describe('Cleanup', () => {
     expect(res.status).toEqual(200);
     expect(res.body).not.toBeNull();
     expect(res.body.msg).toEqual('Template was successfully deleted');
+    const documents = await TemplateVersion.find({}).lean().count();
+    // template versions must be removed
+    expect(documents).toEqual(0);
   });
 
   test('should delete the second template', async () => {

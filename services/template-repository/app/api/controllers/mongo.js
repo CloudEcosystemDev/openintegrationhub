@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const config = require('../../config/index.js');
 const log = require('../../config/logger');
 const FlowTemplate = require('../../models/flowTemplate');
+const TemplateVersion = require('../../models/templateVersion');
 
 const format = (template) => {
   const newTemplate = template;
@@ -119,6 +120,34 @@ const getTemplateById = (flowTemplateId, user) => new Promise((resolve) => {
     });
 });
 
+const getTemplateVersionById = (templateVersionId) => new Promise((resolve) => {
+  const qry = { _id: new mongoose.Types.ObjectId(templateVersionId) };
+  TemplateVersion.findOne(qry).lean()
+    .then((doc) => {
+      const templateVersion = format(doc);
+      resolve(templateVersion);
+    })
+    .catch((err) => {
+      log.error(err);
+    });
+});
+
+// eslint-disable-next-line max-len
+const getTemplateVersionsByTemplateId = (templateId, selectProjection) => new Promise((resolve, reject) => {
+  const qry = { templateId: new mongoose.Types.ObjectId(templateId) };
+  TemplateVersion.find(qry, selectProjection).sort({ _id: -1 }).lean().then((doc) => {
+    const templateVersions = doc;
+    for (let i = 0; i < templateVersions.length; i += 1) {
+      templateVersions[i] = format(templateVersions[i]);
+    }
+    resolve(templateVersions);
+  })
+    .catch((err) => {
+      reject();
+      log.error(err);
+    });
+});
+
 const addTemplate = (storeTemplate) => new Promise((resolve) => {
   storeTemplate.save()
     .then((doc) => {
@@ -190,6 +219,17 @@ const deleteTemplate = (flowTemplateId, user) => new Promise((resolve) => {
     });
 });
 
+const deleteTemplateVersions = (templateId) => new Promise((resolve) => {
+  const qry = { templateId: new mongoose.Types.ObjectId(templateId) };
+  TemplateVersion.deleteMany(qry)
+    .then((response) => {
+      resolve(response);
+    })
+    .catch((err) => {
+      log.error(err);
+    });
+});
+
 const anonymise = (userId) => new Promise((resolve) => {
   FlowTemplate.update(
     { 'owners.id': userId },
@@ -231,4 +271,7 @@ module.exports = {
   anonymise,
   getOrphanedTemplates,
   format,
+  getTemplateVersionById,
+  getTemplateVersionsByTemplateId,
+  deleteTemplateVersions,
 };

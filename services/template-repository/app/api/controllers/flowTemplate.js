@@ -28,6 +28,7 @@ const log = require('../../config/logger'); // eslint-disable-line
 
 // require our MongoDB-Model
 const FlowTemplate = require('../../models/flowTemplate');
+const TemplateVersion = require('../../models/templateVersion');
 
 // Gets all flowTemplates
 router.get('/', jsonParser, can(config.flowTemplateReadPermission), async (req, res) => {
@@ -170,15 +171,11 @@ router.patch('/:id', jsonParser, can(config.flowTemplateWritePermission), async 
 
   // Get the current template
   const oldTemplate = await storage.getTemplateById(req.params.id, req.user);
+  const copyOldTemplate = JSON.parse(JSON.stringify(oldTemplate));
 
   if (!oldTemplate) {
     return res.status(404).send({ errors: [{ message: 'Template not found', code: 404 }] });
   }
-
-  // TODO: Decide How to handle Template States when Updated (i.e. Published -> Draft and bump version if changed?)
-  /* if (oldTemplate.status !== 'draft') {
-     return res.status(409).send({ errors: [{ message: `Flow is not inactive. Current status: ${oldFlow.status}`, code: 409 }] });
-  } */
 
   const updateTemplate = Object.assign(oldTemplate, updateData);
   updateTemplate._id = updateTemplate.id;
@@ -213,12 +210,76 @@ router.patch('/:id', jsonParser, can(config.flowTemplateWritePermission), async 
       },
     };
 
+    const templateVersion = { template: copyOldTemplate, templateId: oldTemplate._id };
+    const newTemplateVersion = new TemplateVersion(templateVersion);
+    await newTemplateVersion.save();
+
     await publishQueue(ev);
 
     res.status(200).send({ data: response, meta: {} });
   } catch (err) {
     res.status(500).send({ errors: [{ message: err }] });
   }
+});
+
+router.get('/:id/versions', jsonParser, can(config.flowTemplateReadPermission), async (req, res) => {
+  const templateId = req.params.id;
+
+  if (!mongoose.Types.ObjectId.isValid(templateId)) {
+    return res.status(400).send({ errors: [{ message: 'Invalid id', code: 400 }] });
+  }
+
+  const template = await storage.getTemplateById(templateId, req.user);
+
+  if (!template) {
+    return res.status(404).send({ errors: [{ message: 'Template not found', code: 404 }] });
+  }
+
+  // we skip the template object by default
+  let selectProjection = '-template';
+
+  if (req.query.verbose === 'true') {
+    selectProjection = '';
+  }
+  const versions = await storage.getTemplateVersionsByTemplateId(templateId, selectProjection);
+
+  const response = {
+    data: versions,
+    meta: {},
+  };
+
+  return res.status(200).send(response);
+});
+
+router.get('/:id/versions/:versionId', jsonParser, can(config.flowTemplateReadPermission), async (req, res) => {
+  const templateId = req.params.id;
+  const versionTemplateId = req.params.versionId;
+
+  if (!mongoose.Types.ObjectId.isValid(templateId)) {
+    return res.status(400).send({ errors: [{ message: 'Invalid id', code: 400 }] });
+  }
+  if (!mongoose.Types.ObjectId.isValid(versionTemplateId)) {
+    return res.status(400).send({ errors: [{ message: 'Invalid template version id', code: 400 }] });
+  }
+
+  const template = await storage.getTemplateById(templateId, req.user);
+
+  if (!template) {
+    return res.status(404).send({ errors: [{ message: 'Template not found', code: 404 }] });
+  }
+
+  const templateVersion = await storage.getTemplateVersionById(versionTemplateId);
+
+  if (!templateVersion) {
+    return res.status(404).send({ errors: [{ message: 'Template version not found', code: 404 }] });
+  }
+
+  const response = {
+    data: templateVersion,
+    meta: {},
+  };
+
+  return res.status(200).send(response);
 });
 
 // Gets a template by id
@@ -255,13 +316,9 @@ router.delete('/:id', can(config.flowTemplateWritePermission), jsonParser, async
     return res.status(404).send({ errors: [{ message: 'Template not found', code: 404 }] });
   }
 
-  /* TODO: Decide if published templates can be directly deleted. If this section is not needed, the first check for "oldTemplate"
-  // May not be needed also, because of the check when calling to storage.deleteTemplate()
-  if (oldTemplate.status !== 'draft') {
-    return res.status(409).send({ errors: [{ message: `Flow is not inactive. Current status: ${oldFlow.status}`, code: 409 }] });
-  } */
-
   const response = await storage.deleteTemplate(templateId, req.user);
+  // we delete the versions of this template
+  await storage.deleteTemplateVersions(templateId);
 
   if (!response) {
     res.status(404).send({ errors: [{ message: 'Template not found', code: 404 }] });
