@@ -88,7 +88,7 @@ router.post('/', auth.hasTenantPermissions([PERMISSIONS['tenant.account.create']
 /**
  * Get all Users
  */
-router.get('/', auth.isAdmin, async (req, res, next) => {
+router.get('/', auth.isLoggedIn, async (req, res, next) => {
     try {
         const filter = {};
         if (req.query.userId) {
@@ -111,6 +111,10 @@ router.get('/', auth.isAdmin, async (req, res, next) => {
             filter.username = {
                 $in: filterUsernames,
             };
+        }
+        // we assure that a user can only fetch users from their tenant
+        if (!req.user.isAdmin) {
+            filter.tenant = req.user.tenant;
         }
         const doc = await AccountDAO.find(filter);
 
