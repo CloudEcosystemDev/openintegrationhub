@@ -27,6 +27,11 @@ const mapperDefaultSchema = new Schema(
 
 const DefaultModel = mongoose.model('MapperDefault', mapperDefaultSchema);
 
+const LOOKUPTYPES = {
+  SINGLE: 'single',
+  MULTIPLE: 'multiple',
+}
+
 const lookupSchema = new Schema({
   data: {
     componentId: { type: String, required: true },
@@ -34,6 +39,7 @@ const lookupSchema = new Schema({
     keyPath: { type: String, required: true },
     labelPath: { type: String, required: true },
     parameterName: { type: String, required: true },
+    type: { type: String, enum: Object.values(LOOKUPTYPES), default: LOOKUPTYPES.SINGLE, required: true },
   },
 });
 
