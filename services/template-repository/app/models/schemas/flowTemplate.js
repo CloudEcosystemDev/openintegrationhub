@@ -12,9 +12,9 @@ const TYPES = {
 };
 
 const FIELD_TYPES = {
-  DROPDOWN_SELECTION: 'DROPDOWN_SELECTION',
-  USER_INPUT: 'USER_INPUT',
-  LOOKUP: 'LOOKUP',
+  OUTPUT_FIELD: 'OUTPUT_FIELD',
+  TEXT: 'TEXT'
+  LOOKUP: 'LOOKUP'
 };
 
 const mapperDefaultSchema = new Schema(
@@ -22,7 +22,7 @@ const mapperDefaultSchema = new Schema(
     fieldType: {
       type: String,
       enum: Object.keys(FIELD_TYPES),
-      default: FIELD_TYPES.DROPDOWN_SELECTION,
+      default: FIELD_TYPES.OUTPUT_FIELD,
       required: true,
     },
     type: {
@@ -30,7 +30,6 @@ const mapperDefaultSchema = new Schema(
       enum: Object.keys(TYPES),
       required: true,
     },
-
   },
   {
     _id: false,
