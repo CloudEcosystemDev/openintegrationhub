@@ -13,8 +13,8 @@ const TYPES = {
 
 const FIELD_TYPES = {
   OUTPUT_FIELD: 'OUTPUT_FIELD',
-  TEXT: 'TEXT'
-  LOOKUP: 'LOOKUP'
+  TEXT: 'TEXT',
+  LOOKUP: 'LOOKUP',
 };
 
 const mapperDefaultSchema = new Schema(
