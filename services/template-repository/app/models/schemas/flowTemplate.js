@@ -24,7 +24,7 @@ const mapperDefaultSchema = new Schema(
       enum: Object.keys(FIELD_TYPES),
       default: FIELD_TYPES.DROPDOWN_SELECTION,
       required: true,
-    }
+    },
     type: {
       type: String,
       enum: Object.keys(TYPES),
