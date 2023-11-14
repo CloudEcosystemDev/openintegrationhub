@@ -70,7 +70,6 @@ const defaultSchema = new Schema({
   data: {
     value: {
       type: String,
-      required: true,
     },
   },
 });
