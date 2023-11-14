@@ -42,7 +42,7 @@ const DefaultModel = mongoose.model('MapperDefault', mapperDefaultSchema);
 const LOOKUPTYPES = {
   SINGLE: 'single',
   MULTIPLE: 'multiple',
-}
+};
 
 const lookupSchema = new Schema({
   data: {
@@ -51,7 +51,9 @@ const lookupSchema = new Schema({
     keyPath: { type: String, required: true },
     labelPath: { type: String, required: true },
     parameterName: { type: String, required: true },
-    type: { type: String, enum: Object.values(LOOKUPTYPES), default: LOOKUPTYPES.SINGLE, required: true },
+    type: {
+      type: String, enum: Object.values(LOOKUPTYPES), default: LOOKUPTYPES.SINGLE, required: true,
+    },
   },
 });
 
@@ -120,6 +122,10 @@ const node = new Schema(
     virtualComponentId: {
       type: String,
       description: 'The virtual component id',
+    },
+    componentVersionId: {
+      type: String,
+      description: 'The component version id',
     },
     function: {
       type: String,
