@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 const CONSTANTS = require('../../constants');
+const settings = new Schema({
+    key: { type: String},
+    value: { type: String},
+    label: { type: String},
+})
 
 const TenantSchema = new Schema({
     name: { type: String, index: true,unique:true },
@@ -18,7 +23,7 @@ const TenantSchema = new Schema({
         ],
         default: CONSTANTS.STATUS.ACTIVE,
     },
-
+    settings: [ settings ],
 }, {
     timestamps: true,
 });
