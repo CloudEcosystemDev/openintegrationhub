@@ -28,6 +28,9 @@ const config = {
 
         mongodb_url: optional('IAM_MONGODB_CONNECTION', 'mongodb://localhost:27017/accounts'),
         rabbitmqUrl: optional('RABBITMQ_URI', 'amqp://guest:guest@localhost:5672'),
+        secretServiceUrl: process.env.SECRET_SERVICE_URL || 'http://secret-service.oih-dev-ns.svc.cluster.local:3000/api/v1',
+        componentRepositoryUrl: process.env.COMP_REPO_URL || 'http://component-repository-service.oih-dev-ns.svc.cluster.local:1234/',
+
         originWhitelist: originwhitelist.concat(optional('NODE_ENV') !== 'production' ? [
             // development only
             '127.0.0.1', 
