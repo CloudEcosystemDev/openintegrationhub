@@ -15,6 +15,7 @@ const FIELD_TYPES = {
   OUTPUT_FIELD: 'OUTPUT_FIELD',
   TEXT: 'TEXT',
   LOOKUP: 'LOOKUP',
+  USER_INPUT: 'USER_INPUT',
 };
 
 const mapperDefaultSchema = new Schema(
